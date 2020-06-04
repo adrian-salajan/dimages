@@ -18,6 +18,8 @@ object Color {
   def apply(r: Float, g: Float, b: Float): Color = Color(r ,g ,b, 1)
   val Clear: Color = Color(0, 0, 0, 0)
   val Black: Color = Color(0, 0, 0, 1)
+  val White: Color = Color(1, 1, 1, 1)
+  val Red: Color = Color(1, 0, 0, 1)
 
   implicit val colorMonoidConal: Monoid[Color] =  new Monoid[Color] {
     override def empty: Color = Color.Clear

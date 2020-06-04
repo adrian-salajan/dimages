@@ -19,3 +19,4 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.2" % "test"
 libraryDependencies += "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.3" % Test
 
 
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)

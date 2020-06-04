@@ -3,6 +3,7 @@ package dimages
 
 import java.awt.image.BufferedImage
 
+import cats.{Applicative, Functor}
 import cats.kernel.Monoid
 
 import scala.util.Try
@@ -67,13 +68,29 @@ object Image {
 
   def monochrome[A](a: A): Image[A]= Image.lift(a)
 
-//  def imMonoid[A](implicit M: Monoid[A]): Monoid[Image[A]] = new Monoid[Image[A]] {
-//    override def empty: Image[A] = new Image[A]({_ => M.empty})
-//
-//    override def combine(x: Image[A], y: Image[A]): Image[A] = new Image[A]({
-//      loc => M.combine(x.im(loc), y.im(loc))
-//    })
-//  }
+  implicit def imMonoid[A](implicit M: Monoid[A]): Monoid[Image[A]] = new Monoid[Image[A]] {
+    override def empty: Image[A] = Image.lift(M.empty)
+
+    override def combine(x: Image[A], y: Image[A]): Image[A] = {
+      val c: A => A => A = M.combine _ curried
+      val i  = Image.lift2(c)(x)(y)
+      i
+    }
+  }
+
+  implicit val imFunctor: Functor[Image] = new Functor[Image] {
+    override def map[A, B](fa: Image[A])(f: A => B): Image[B] = Image.lift1(f)(fa)
+  }
+
+  implicit val imApplicative: Applicative[Image] = new Applicative[Image] {
+    override def pure[A](x: A): Image[A] = Image.lift(x)
+
+    override def ap[A, B](ff: Image[A => B])(fa: Image[A]): Image[B] =
+      Image.lift2[A => B, A, B] {
+        fab => a => fab(a)
+      }(ff)(fa)
+
+  }
 }
 
 class ImageC(img: Loc => Color) extends Image[Color](img)

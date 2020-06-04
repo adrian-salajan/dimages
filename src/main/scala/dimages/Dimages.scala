@@ -9,7 +9,7 @@ case class Loc(x: Double, y: Double)
 
 object Dimages {
 
-  def loadDimage(path: String): ImageC = {
+  def loadDimage(path: String): Image[Color] = {
     val in = ImageIO.read(new File(path))
     Image(in)
   }
