@@ -11,19 +11,19 @@ object Dimages {
 
   def loadDimage(path: String): ImageC = {
     val in = ImageIO.read(new File(path))
-    ImageC(in)
+    Image(in)
   }
 
   def saveDimage(width: Int, height: Int, image: Image[Color], outputFile: File): Boolean = {
     def run(img: Image[Color]): BufferedImage = {
-      val buffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB)
+      val buffer = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
       for {
         i <- 0 until width
         j <- 0 until height
-      } buffer.setRGB(i, j, img.im(Loc(i, j)).intColor)
+      } buffer.setRGB(i, j, img.im(Loc(i, j)).toInt)
       buffer
     }
-    ImageIO.write(run(image), "bmp", outputFile)
+    ImageIO.write(run(image), "png", outputFile)
   }
 
   def createOutputFile(path: String): File = {

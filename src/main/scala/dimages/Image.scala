@@ -3,6 +3,7 @@ package dimages
 
 import java.awt.image.BufferedImage
 
+import cats.kernel.Monoid
 
 import scala.util.Try
 
@@ -51,20 +52,29 @@ object Image {
     ima => imab => imac => new Image[D]({
       loc => f(ima.im(loc))(imab.im(loc))(imac.im(loc))
     })
-}
 
-class ImageC(img: Loc => Color) extends Image[Color](img)
-
-object ImageC {
   def apply(b: BufferedImage): ImageC = new ImageC({
     loc: Loc => {
-      Color {
-        Try(//map out of bounds to black
-          b.getRGB(loc.x.toInt, loc.y.toInt)
-        ).fold(_ => Color.Black.intColor, c => c)
-      }
+
+      Try(//map out of bounds to black
+        {
+          val c = new java.awt.Color(b.getRGB(loc.x.toInt, loc.y.toInt))
+          Color(c.getRed.toFloat / 255, c.getGreen.toFloat / 255, c.getBlue.toFloat / 255, c.getAlpha.toFloat / 255)
+        }
+      ).fold(_ => Color.Black, c => c)
     }
   })
 
   def monochrome[A](a: A): Image[A]= Image.lift(a)
+
+//  def imMonoid[A](implicit M: Monoid[A]): Monoid[Image[A]] = new Monoid[Image[A]] {
+//    override def empty: Image[A] = new Image[A]({_ => M.empty})
+//
+//    override def combine(x: Image[A], y: Image[A]): Image[A] = new Image[A]({
+//      loc => M.combine(x.im(loc), y.im(loc))
+//    })
+//  }
 }
+
+class ImageC(img: Loc => Color) extends Image[Color](img)
+
