@@ -37,6 +37,25 @@ case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
     else b + tolerance >= a
   }
 
+  def - (a: Color): Color =  applyf(this, a)((a, b) => Math.max(0f, a - b) )
+
+  def + (a: Color): Color = applyf(this, a)((a, b) => Math.min(1, a + b) )
+
+
+  def overlay(a: Color): Color = applyf(this, a)(overlay)
+
+  def applyf(a: Color, b: Color)(f: (Float, Float) => Float): Color =
+    Color(
+      f(a.red, b.red),
+      f(a.green, b.green),
+      f(a.blue, b.blue),
+      1
+    )
+
+  private def overlay(a: Float, b: Float): Float =
+    if (a < 0.5) 2*a*b
+    else 1-2*(1-a)*(1-b)
+
 }
 
 

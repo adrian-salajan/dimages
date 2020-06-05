@@ -54,7 +54,8 @@ object Image {
       loc => f(ima.im(loc))(imab.im(loc))(imac.im(loc))
     })
 
-  def apply(b: BufferedImage): ImageC = new ImageC({
+  def apply[A](a: A): Image[A] = new Image[A](_ => a)
+  def load(b: BufferedImage): ImageC = new ImageC({
     loc: Loc => {
 
       Try(//map out of bounds to black

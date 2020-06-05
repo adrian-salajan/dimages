@@ -11,7 +11,7 @@ object Dimages {
 
   def loadDimage(path: String): Image[Color] = {
     val in = ImageIO.read(new File(path))
-    Image(in)
+    Image.load(in)
   }
 
   def saveDimage(width: Int, height: Int, image: Image[Color], outputFile: File): Boolean = {

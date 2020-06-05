@@ -3,25 +3,24 @@ package dimages
 import java.io.File
 
 import Dimages._
-import Transform._
 object Main {
 
   def main(args: Array[String]): Unit = {
 
-    val baloons = this.getClass.getClassLoader.getResource("baloons.bmp")
-    val screen = this.getClass.getClassLoader.getResource("a.bmp")
+    val birdie = this.getClass.getClassLoader.getResource("bird.png")
+    val cray = this.getClass.getClassLoader.getResource("crayons.png")
 
-    val img1: Image[Color] = Dimages.loadDimage(baloons.getFile)
-    val img2: Image[Color] = Dimages.loadDimage(screen.getFile)
+    val bird: Image[Color] = Dimages.loadDimage(birdie.getFile)
+    val crayons: Image[Color] = Dimages.loadDimage(cray.getFile)
 
 
-//    save[Color](img1, {_.over(img2, Color.colorMonoidMin.combine)}, "over.png")
-//    save[Color](img1, {_.crop(
+//    save[Color](bird, {_.over(img2, Color.colorMonoidMin.combine)}, "over.png")
+//    save[Color](bird, {_.crop(
 //      Region.rectangle(Loc(300, 500),Loc(600, 800)),
 //      Color.Clear
 //    )}, "crop.png")
-//    save[Color](img1, {_.transform(rotateClockwise(315))}, "rotated.png")
-//    save[Color](img1, {_.cond(
+//    save[Color](bird, {_.transform(rotateClockwise(315))}, "rotated.png")
+//    save[Color](bird, {_.cond(
 //        Region.rectangle(Loc(200, 200), Loc(400, 400)),
 //        img2
 //    )}, "replaced.png")
@@ -30,20 +29,26 @@ object Main {
     import ColorEffects._
 
     //functor
-//    save[Color](img1, threshold(_, 0.66f, Color.Black, Color.White), "functor/threshold.png")
-//    save[Color](img1, grayscale, "functor/grayscale.png")
-//    save[Color](img1, saturate, "functor/saturate.png")
-//    save[Color](img1, invert, "functor/invert.png")
-//    save[Color](img1, keepMax, "functor/keepMax.png")
-//    save[Color](img1, replaceColors, "functor/replaceColors.png")
-//    save[Color](img1, almostGray, "functor/almostGray.png")
-//    save[Color](img1, distributeBlue, "functor/distributeBlue.png")
+//    save[Color](bird, F.threshold(_, 0.4f, Color.Black, Color.White), "functor/threshold.png")
+//    save[Color](bird, F.grayscale, "functor/grayscale.png")
+//    save[Color](bird, F.saturate, "functor/saturate.png")
+//    save[Color](bird, F.invert, "functor/invert.png")
+//    save[Color](bird, F.keepMax, "functor/keepMax.png")
+//    save[Color](bird, F.replaceColors, "functor/replaceColors.png")
+//    save[Color](bird, F.almostGray, "functor/almostGray.png")
+//    save[Color](bird, F.distributeBlue, "functor/distributeBlue.png")
+
+    //applicative
+    def self[A]: Image[A] => Image[A] = a => a
+    save[Color](Ap.substract(bird, crayons), self, "applicative/substract.png")
+    save[Color](Ap.max(bird, crayons), self, "applicative/max.png")
+    save[Color](Ap.overlay(bird, crayons), self, "applicative/overlay.png")
 
 
  }
 
   def save[A](im: Image[A], m: Image[A] => Image[Color], fileName: String):Unit = {
-    val saved = Dimages.saveDimage(900, 900, m(im), createOutputFile(s"png/$fileName"))
+    val saved = Dimages.saveDimage(640, 426, m(im), createOutputFile(s"png/$fileName"))
     println(s"$fileName: $saved")
   }
 
