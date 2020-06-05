@@ -3,6 +3,8 @@
 *.bmp
 *.png
 
+png/
+
 # sbt specific
 .cache/
 .history/

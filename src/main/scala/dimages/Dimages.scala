@@ -28,7 +28,10 @@ object Dimages {
 
   def createOutputFile(path: String): File = {
     val outFile = new File(path)
-    if (!outFile.exists()) outFile.createNewFile()
+    if (!outFile.exists()) {
+      outFile.mkdirs()
+      outFile.createNewFile()
+    }
     outFile
   }
 

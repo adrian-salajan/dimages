@@ -15,36 +15,37 @@ object Main {
     val img2: Image[Color] = Dimages.loadDimage(screen.getFile)
 
 
-    val over = img1.over(img2, Color.colorMonoidMin.combine)
+//    save[Color](img1, {_.over(img2, Color.colorMonoidMin.combine)}, "over.png")
+//    save[Color](img1, {_.crop(
+//      Region.rectangle(Loc(300, 500),Loc(600, 800)),
+//      Color.Clear
+//    )}, "crop.png")
+//    save[Color](img1, {_.transform(rotateClockwise(315))}, "rotated.png")
+//    save[Color](img1, {_.cond(
+//        Region.rectangle(Loc(200, 200), Loc(400, 400)),
+//        img2
+//    )}, "replaced.png")
 
 
-    println(Dimages.saveDimage(930, 985, over, createOutputFile("over.png")))
+    import ColorEffects._
 
-    val cropImg = img1.crop(
-      Region.rectangle(Loc(300, 500),Loc(600, 800)),
-      Color.Clear
-    )
-    println(Dimages.saveDimage(900, 900, cropImg, createOutputFile("crop.png")))
+    //functor
+//    save[Color](img1, threshold(_, 0.66f, Color.Black, Color.White), "functor/threshold.png")
+//    save[Color](img1, grayscale, "functor/grayscale.png")
+//    save[Color](img1, saturate, "functor/saturate.png")
+//    save[Color](img1, invert, "functor/invert.png")
+//    save[Color](img1, keepMax, "functor/keepMax.png")
+//    save[Color](img1, replaceColors, "functor/replaceColors.png")
+//    save[Color](img1, almostGray, "functor/almostGray.png")
+//    save[Color](img1, distributeBlue, "functor/distributeBlue.png")
 
 
-
-    val rotated: Image[Color] = img1.transform(rotateClockwise(315))
-    val rotatedFile: File = createOutputFile("rotated.png")
-    println(Dimages.saveDimage(900, 900, rotated, rotatedFile))
-
-    val replaced: Image[Color] = img1.cond(
-      Region.rectangle(Loc(200, 200), Loc(400, 400)),
-      img2
-    )
-    val replacedFile: File = createOutputFile("replaced.png")
-    println(Dimages.saveDimage(900, 900, replaced, replacedFile))
-
-    import cats.syntax.all._
-    import Image.imFunctor
-
-    val fullRed = img1.map(c => c.r == 1).map(b => if (b) Color.Red else Color.Clear)
-    println(Dimages.saveDimage(900, 900, fullRed, createOutputFile("fullRed.png")))
  }
+
+  def save[A](im: Image[A], m: Image[A] => Image[Color], fileName: String):Unit = {
+    val saved = Dimages.saveDimage(900, 900, m(im), createOutputFile(s"png/$fileName"))
+    println(s"$fileName: $saved")
+  }
 
 
 }
