@@ -42,7 +42,7 @@ import cats.instances.function._
         case _ => c
       })
 
-    def replaceColors(img: Image[Color]): Image[Color] = {
+    def swapColors(img: Image[Color]): Image[Color] = {
       import Math._
       img.map { c =>
         Color(
