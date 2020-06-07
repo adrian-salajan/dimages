@@ -4,6 +4,8 @@ import cats.kernel.Monoid
 
 
 case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
+  def isWhiteish: Boolean = isGrayish && brightness > 0.85
+
   val brightness: Float = (red + green + blue) / 3
 
   val toInt: Int = (((alpha * 255).toInt & 0xFF) << 24) |
@@ -25,32 +27,22 @@ case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
     }
   }
 
-  def isGray: Boolean = {
-    aproxEq(red, green, 0.15f) &&
-    aproxEq(red, blue, 0.15f) &&
-    aproxEq(green, blue, 0.15f)
+  def isGrayish: Boolean = {
+    Color.aproxEq(red, green, 0.15f) &&
+    Color.aproxEq(red, blue, 0.15f) &&
+    Color.aproxEq(green, blue, 0.15f)
   }
 
-  private def aproxEq(a: Float, b: Float, tolerance: Float): Boolean = {
-    if (a == b) true
-    else if (a < b) a + tolerance >= b
-    else b + tolerance >= a
-  }
-
-  def - (a: Color): Color =  applyf(this, a)((a, b) => Math.max(0f, a - b) )
-
-  def + (a: Color): Color = applyf(this, a)((a, b) => Math.min(1, a + b) )
 
 
-  def overlay(a: Color): Color = applyf(this, a)(overlay)
+  def - (a: Color): Color =  Color.applyf(this, a)((a, b) => Math.max(0f, a - b) )
 
-  def applyf(a: Color, b: Color)(f: (Float, Float) => Float): Color =
-    Color(
-      f(a.red, b.red),
-      f(a.green, b.green),
-      f(a.blue, b.blue),
-      1
-    )
+  def + (a: Color): Color = Color.applyf(this, a)((a, b) => Math.min(1, a + b) )
+
+
+  def overlay(a: Color): Color = Color.applyf(this, a)(overlay)
+
+
 
   private def overlay(a: Float, b: Float): Float =
     if (a < 0.5) 2*a*b
@@ -67,6 +59,22 @@ object Color {
   val Red: Color = Color(1, 0, 0, 1)
   val Green: Color = Color(0, 1, 0, 1)
   val Blue: Color = Color(0, 0, 1, 1)
+
+  def applyf(a: Color, b: Color)(f: (Float, Float) => Float): Color =
+    Color(
+      f(a.red, b.red),
+      f(a.green, b.green),
+      f(a.blue, b.blue),
+      1
+    )
+
+  def aproxEq(a: Float, b: Float, tolerance: Float): Boolean = {
+    if (a == b) true
+    else if (a < b) a + tolerance >= b
+    else b + tolerance >= a
+  }
+
+  def mono(f: Float): Color = Color(f, f, f, 1)
 
   implicit val colorMonoidConal: Monoid[Color] =  new Monoid[Color] {
     override def empty: Color = Color.Clear

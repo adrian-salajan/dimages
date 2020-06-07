@@ -56,7 +56,7 @@ import cats.instances.function._
     def distributeBlue(img: Image[Color]): Image[Color] = {
       import Math._
       img.map { c =>
-        if (c.isGray) c else {
+        if (c.isGrayish) c else {
           val hb = c.blue / 3
           Color(
             min(1, c.red + hb),
@@ -69,7 +69,7 @@ import cats.instances.function._
 
     def almostGray(img: Image[Color]): Image[Color] = {
       img.map { c =>
-        if (c.isGray) Color(0.3f, 0.3f, 0.3f, 1f)
+        if (c.isGrayish) Color(0.3f, 0.3f, 0.3f, 1f)
         else c
       }
     }
@@ -93,6 +93,27 @@ import cats.instances.function._
     def overlay(a: Image[Color], b: Image[Color]): Image[Color] = a.map2(b) {
       case (a, b) => a.overlay(b)
     }
+
+    def fill(a: Color): Image[Color] = {
+      imApplicative.pure(a)
+    }
+
+    def colorify[A](img: Image[A], colorEff: Image[A => Color]): Image[Color] = {
+      imApplicative.ap(colorEff)(img)
+    }
+
+    def overlapIf(imga: Image[Color], imgb: Image[Color], f: Color => Boolean): Image[Color] = {
+      val effect: Color => Color => Color = a => b => if (f(b)) a else b
+      val ap1 = imApplicative.ap(imApplicative.pure(effect))(imga)
+      val ap2 = imApplicative.ap(ap1)(imgb)
+      ap2
+
+    }
+
+    def disolve(imga: Image[Color], imgb: Image[Color]): Image[Color] =
+      overlapIf(imga, imgb, _ => Math.random() > 0.5)
+
+
   }
 
 }

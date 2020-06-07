@@ -3,6 +3,7 @@ package dimages
 import java.awt.image.BufferedImage
 import java.io.File
 
+import cats.laws.discipline.BifoldableTests
 import javax.imageio.ImageIO
 
 case class Loc(x: Double, y: Double)

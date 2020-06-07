@@ -54,7 +54,10 @@ object Image {
       loc => f(ima.im(loc))(imab.im(loc))(imac.im(loc))
     })
 
-  def apply[A](a: A): Image[A] = new Image[A](_ => a)
+  def apply[A](a: A): Image[A] = imApplicative.pure(a)
+
+  def self: Image[Loc] = new Image({ a => a})
+
   def load(b: BufferedImage): ImageC = new ImageC({
     loc: Loc => {
 
@@ -91,6 +94,23 @@ object Image {
         fab => a => fab(a)
       }(ff)(fa)
 
+    def mapp[A, B](fa: Image[A])(f: A => B): Image[B] = {
+      ap(pure(f))(fa)
+    }
+
+  }
+
+  def circle(x: Float, y: Float, radius: Float): Image[Boolean] = {
+    import Math.pow
+    val circleProgram: Loc=>Boolean = { loc =>
+      Color.aproxEq(
+        (pow(loc.x - x, 2) + pow(loc.y - y, 2)).toFloat,
+        pow(radius, 2).toFloat,
+        175
+      )
+    }
+
+    imApplicative.ap(imApplicative.pure(circleProgram))(self)
   }
 }
 

@@ -40,9 +40,28 @@ object Main {
 
     //applicative
     def self[A]: Image[A] => Image[A] = a => a
-    save[Color](Ap.substract(bird, crayons), self, "applicative/substract.png")
-    save[Color](Ap.max(bird, crayons), self, "applicative/max.png")
-    save[Color](Ap.overlay(bird, crayons), self, "applicative/overlay.png")
+//    save[Color](Ap.substract(bird, crayons), self, "applicative/substract.png")
+//    save[Color](Ap.max(bird, crayons), self, "applicative/max.png")
+//    save[Color](Ap.overlay(bird, crayons), self, "applicative/overlay.png")
+//    save[Color](Ap.fill(Color.Green), self, "applicative/fill.png")
+//    save[Color](Ap.colorify(
+//      Image.self,
+//      Image((loc: Loc) => Color.mono(Math.sin(loc.x).toFloat) )
+//    ),
+//    self, "applicative/create3.png")
+//
+    save[Color](Ap.colorify(
+      Image.circle(300, 200, 180),
+      Image( (b: Boolean) => if (b) Color.White else Color.Black )
+    ),
+      self, "applicative/circle.png"
+    ) //rasterization problem
+
+    save[Color](Ap.overlapIf(bird, crayons, {
+      c => c.isWhiteish
+    }), self, "applicative/seeThroughWhite.png")
+
+    save[Color](Ap.disolve(bird, crayons), self, "applicative/disolve.png")
 
 
  }
@@ -51,6 +70,7 @@ object Main {
     val saved = Dimages.saveDimage(640, 426, m(im), createOutputFile(s"png/$fileName"))
     println(s"$fileName: $saved")
   }
+
 
 
 }
