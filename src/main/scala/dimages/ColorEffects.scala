@@ -73,6 +73,8 @@ import cats.instances.function._
         else c
       }
     }
+
+    def ignoreInputAndReplaceWith(img: Image[Color], c: Color): Image[Color] = img.map(_ => c)
   }
 
   //applicative

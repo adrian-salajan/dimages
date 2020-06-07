@@ -34,9 +34,10 @@ object Main {
 //    save[Color](bird, F.saturate, "functor/saturate.png")
 //    save[Color](bird, F.invert, "functor/invert.png")
 //    save[Color](bird, F.keepMax, "functor/keepMax.png")
-//    save[Color](bird, F.replaceColors, "functor/replaceColors.png")
+    save[Color](bird, F.replace(_, Color(36 / 255f,22 / 255f, 22/255f,1), Color.Green), "functor/replaceColors.png")
 //    save[Color](bird, F.almostGray, "functor/almostGray.png")
 //    save[Color](bird, F.distributeBlue, "functor/distributeBlue.png")
+    save[Color](bird, F.ignoreInputAndReplaceWith(_, Color.Green), "functor/ignoreInputReplaceGreen.png")
 
     //applicative
     def self[A]: Image[A] => Image[A] = a => a
