@@ -1,5 +1,6 @@
 # dimages
 denotational image lib
+ | [source code here](https://github.com/adrian-salajan/dimages)
 
 ### Intro
 This is a self attempt to better understand FP concepts like functors, applicatives, monads, etc.
