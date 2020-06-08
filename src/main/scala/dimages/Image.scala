@@ -94,8 +94,15 @@ object Image {
         fab => a => fab(a)
       }(ff)(fa)
 
-    def mapp[A, B](fa: Image[A])(f: A => B): Image[B] = {
+    def mapp[A, B](fa: Image[A])(f: A => B): Image[B] =
       ap(pure(f))(fa)
+
+    def ap22[A, B](ff: Image[A => B])(fa: Image[A]): Image[B] =
+      map2(ff, fa)((f, a) => f(a))
+
+    def map22[A, B, C](fa: Image[A], fb: Image[B], f: (A, B) => C): Image[C] = {
+      val one = ap(pure(f curried))(fa)
+      ap(one)(fb)
     }
 
   }

@@ -1,7 +1,7 @@
 # dimages
 denotational image lib
 
-#### Intro
+### Intro
 This is a self attempt to better understand FP concepts like functors, applicatives, monads, etc.
 visually, by implementing them on images.
 
@@ -9,7 +9,7 @@ This project and explanations are not meant to be an introduction to these conce
 
 This was inspired by [Conal Elliott - Denotational Design: From Meanings To Programs](https://www.youtube.com/watch?v=bmKYiUOEo2A)
 
-#### Defining images
+### Defining images
 This is very well explained in the presentation.
 
 TLDR we can say an Image is a function from location (x, y coordinates)
@@ -17,7 +17,7 @@ to some value A. In order to have them rendered on the screen we need visual ima
 
 `class Image[A](val im: Loc => A)` where A is of type `Color`
 
-#### Functor
+### Functor
 
 [bird]:https://github.com/adrian-salajan/dimages/blob/master/src/main/resources/bird.png?raw=true
 [swapColors]:https://github.com/adrian-salajan/dimages/blob/master/png/functor/replaceColors.png?raw=true
@@ -32,6 +32,7 @@ A functor is composed of 2 things
 while leaving the context untouched. Of course, map needs to apply `f` on some `F[A]`, so it has this argument as well:
 `def map(a: F[A], f: A => B): F[B]`
 
+#### Functor on images
 So having implemented functor for images (check the code and presentation), what does this mean?
 
 It means that given a source image, we can transform it into another, given a function `Color => Color`.
@@ -51,7 +52,7 @@ grayscale colors:
 
 ![grayscale][grayscale]
 
-swap colors:
+Replace colors - that specific dark red with green:
 
 ![swap colors][swapColors]
 
@@ -59,7 +60,7 @@ invert colors:
 
 ![invert colors][invert]
 
-threshold:
+threshold - if brightness over some value V then put White else put Black:
 
 ![threshold][threshold]
 
@@ -73,9 +74,90 @@ like `Color => Boolean`, it's just that we can't render booleans to screen (for 
 a second map transformation `Boolean => Color`, but then again due to function composition
 we can compose the functions into a single one `Color => Color`
 
-#### Applicative
+### Applicative
 
-#### Monad
+An applicative is composed of 3 things:
+
+1. A context/wrapper over a generic value A.
+2. A function which can wrap any value `A` with the context `F`. `pure(a: A): F[A]`. So it must be that `pure` knows what the `F` context means. Very important.
+3. One of the two functions which are equivalent to each other (can rewrite one in terms of the other + `pure`):
+    * `map2(a: F[A], b: F[B], f: (A, B) => C): F[C]`
+    * `apply(a: F[A], f: F[A => B]): F[B]`
+    
+#### Map2
+`map2(a: F[A], b: F[B], f: (A, B) => C): F[C]`
+
+This says it can merge 2 contexts. The `f` function knows how to merge A and B into a new value C,
+but `map2` knows (just like `pure`) about what the context means, so it actually knows to merge 2 contexts (of the same type) together.
+We can replace the word `context` with `effect` => `map2` knows how to merge 2 effects.
+
+#### Apply
+`apply(a: F[A], f: F[A => B]): F[B]`
+
+This is more tricky to understand intuitively, but given a function/program wrapped in the context/effect `F`,
+we can run the program with the value in `a: F[A]`.
+Not to be confused with the functor's `map(a: F[A], f: A => B): F[B]` - there is an extra `F` over `f` in apply.
+
+Because `apply` also gets as input 2 `F`s and returns only one it means that it also knows how to merge these `F`s (just like `map2`)
+
+#### Map2 vs Apply
+So what is the difference? Formally none because we can write one in terms of the other + `pure`
+
+<pre>
+    def map2[F[_], A, B, C](fa: F[A], fb: F[B], f: (A, B) => C): F[C] = {
+      val one = ap(pure(f curried))(fa)
+      ap(one)(fb)
+    }
+
+    def apply[A, B](ff: F[A => B])(fa: F[A]): F[B] =
+      map2(ff, fa)((f, a) => f(a))
+</pre>
+
+So it's clear that both `map2` and `apply` know how to merge F contexts/effects, but what about the difference in signatures?
+
+`ff: F[A => B]` from `apply` is the partial application of `f: (A, B) => C` from `map2` with `a: F[A]`,
+it kinda holds a `F[A]` inside.
+
+#### Applicative is also a Functor
+<pre>
+    def map[A, B](fa: F[A])(f: A => B): F[B] =
+      ap(pure(f))(fa)
+</pre>
+
+But functor is not an applicative, functor does not have `pure` so it does not know anything about what `F` means.
+
+#### Applicative on images
+[cy]:https://github.com/adrian-salajan/dimages/blob/master/src/main/resources/crayons.png?raw=true
+[max]:https://github.com/adrian-salajan/dimages/blob/master/png/applicative/max.png?raw=true
+[sw]:https://github.com/adrian-salajan/dimages/blob/master/png/applicative/seeThroughWhite.png?raw=true
+[disolve]:https://github.com/adrian-salajan/dimages/blob/master/png/applicative/disolve.png?raw=true
+
+Given F is an Image it means we can combine any 2 images.
+
+Original image A:
+
+![original image A][bird]
+
+Original image B:
+
+![original image B][cy]
+
+Max between A and B
+
+![max][max]
+
+See through white
+
+![sw][sw]
+
+Disolve (creates a new images randomly taking color from A or B)
+
+![disolve][disolve]
+
+
+
+### Monad
+tbd
 
 
 

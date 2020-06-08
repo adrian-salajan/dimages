@@ -58,6 +58,14 @@ object Main {
       self, "applicative/circle.png"
     ) //rasterization problem
 
+    save[Color](Ap.colorify2[Boolean](
+      Image.circle(300, 200, 180),
+      Image.apply(Color.Black),
+      (b, c) => if (b) Color.White else c
+    ),
+      self, "applicative/circle2.png"
+    ) //rasterization problem
+
     save[Color](Ap.overlapIf(bird, crayons, {
       c => c.isWhiteish
     }), self, "applicative/seeThroughWhite.png")

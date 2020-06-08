@@ -104,6 +104,10 @@ import cats.instances.function._
       imApplicative.ap(colorEff)(img)
     }
 
+    def colorify2[A](img: Image[A], imgb: Image[Color], f: (A, Color) => Color): Image[Color] = {
+     imApplicative.map2(img, imgb)(f)
+    }
+
     def overlapIf(imga: Image[Color], imgb: Image[Color], f: Color => Boolean): Image[Color] = {
       val effect: Color => Color => Color = a => b => if (f(b)) a else b
       val ap1 = imApplicative.ap(imApplicative.pure(effect))(imga)
