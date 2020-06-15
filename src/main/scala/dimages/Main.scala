@@ -51,26 +51,37 @@ object Main {
 //    ),
 //    self, "applicative/create3.png")
 //
-    save[Color](Ap.colorify(
-      Image.circle(300, 200, 180),
-      Image( (b: Boolean) => if (b) Color.White else Color.Black )
-    ),
-      self, "applicative/circle.png"
-    ) //rasterization problem
+//    save[Color](Ap.colorify(
+//      Image.circle(300, 200, 180),
+//      Image( (b: Boolean) => if (b) Color.White else Color.Black )
+//    ),
+//      self, "applicative/circle.png"
+//    )
+    //rasterization problem
 
-    save[Color](Ap.colorify2[Boolean](
-      Image.circle(300, 200, 180),
-      Image.apply(Color.Black),
-      (b, c) => if (b) Color.White else c
-    ),
-      self, "applicative/circle2.png"
-    ) //rasterization problem
+//    save[Color](Ap.colorify2[Boolean](
+//      Image.circle(300, 200, 180),
+//      Image.apply(Color.Black),
+//      (b, c) => if (b) Color.White else c
+//    ),
+//      self, "applicative/circle2.png"
+//    )
+    //rasterization problem
 
-    save[Color](Ap.overlapIf(bird, crayons, {
-      c => c.isWhiteish
-    }), self, "applicative/seeThroughWhite.png")
+//    save[Color](Ap.overlapIf(bird, crayons, {
+//      c => c.isWhiteish
+//    }), self, "applicative/seeThroughWhite.png")
 
-    save[Color](Ap.disolve(bird, crayons), self, "applicative/disolve.png")
+//    save[Color](Ap.disolve(bird, crayons), self, "applicative/disolve.png")
+
+
+    save[Color](M.whiteStripes(bird), self, "monad/whiteStripes.png")
+    save[Color](M.transforms(bird,
+      M.translate(-320, -213),
+      M.scale(2, 0.5),
+      M.rotate(45),
+      M.translate(320, 213),
+    ), self, "monad/rotate.png")
 
 
  }

@@ -15,7 +15,7 @@ libraryDependencies += "org.typelevel" %% "cats-testkit" % "2.0.0"
 libraryDependencies += "org.typelevel" %% "cats-testkit-scalatest" % "1.0.1"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.2" % "test"
-
+libraryDependencies  += "org.scalanlp" %% "breeze" % "1.0"
 libraryDependencies += "com.github.alexarchambault" %% "scalacheck-shapeless_1.14" % "1.2.3" % Test
 
 

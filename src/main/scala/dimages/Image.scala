@@ -3,8 +3,8 @@ package dimages
 
 import java.awt.image.BufferedImage
 
-import cats.{Applicative, Functor}
 import cats.kernel.Monoid
+import cats.{Applicative, Functor, Monad}
 
 import scala.util.Try
 
@@ -76,7 +76,7 @@ object Image {
     override def empty: Image[A] = Image.lift(M.empty)
 
     override def combine(x: Image[A], y: Image[A]): Image[A] = {
-      val c: A => A => A = M.combine _ curried
+      val c: A => A => A = (M.combine _).curried
       val i  = Image.lift2(c)(x)(y)
       i
     }
@@ -101,11 +101,40 @@ object Image {
       map2(ff, fa)((f, a) => f(a))
 
     def map22[A, B, C](fa: Image[A], fb: Image[B], f: (A, B) => C): Image[C] = {
-      val one = ap(pure(f curried))(fa)
+      val one = ap(pure(f.curried))(fa)
       ap(one)(fb)
     }
 
   }
+  implicit val imMonad: Monad[Image] = new Monad[Image] {
+    override def flatMap[A, B](fa: Image[A])(f: A => Image[B]): Image[B] = new Image[B] ({
+      loc =>
+        val img: Image[B] = f(fa.im(loc))
+        img.im(loc)
+    })
+
+    override def tailRecM[A, B](a: A)(f: A => Image[Either[A, B]]): Image[B] = new Image[B]( {
+        loc =>
+          def rec(ab:Either[A, B]): B = ab match {
+            case Left(a) => rec(f(a).im(loc))
+            case Right(b) => b
+          }
+
+          rec(f(a).im(loc))
+
+//        f(a).im(loc) match {
+//          case Left(a) =>
+//            val x  = tailRecM(a)(f).im(loc)
+//            x
+//          case Right(b) => b
+//        }
+    })
+
+
+    override def pure[A](x: A): Image[A] = Image.lift(x)
+  }
+
+
 
   def circle(x: Float, y: Float, radius: Float): Image[Boolean] = {
     import Math.pow

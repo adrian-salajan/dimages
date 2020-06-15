@@ -82,7 +82,7 @@ object Color {
 // ??   overC top bot = top ^+^ (1 - colorA top) *^ bot
     override def combine(top: Color, bottom: Color): Color = {
       val s: Float = 1 - top.alpha
-      val newBottom = Color(bottom.red + s, bottom.green + s, bottom.blue + s, bottom.alpha + s)
+      val newBottom = Color(bottom.red * s, bottom.green * s, bottom.blue * s, bottom.alpha * s)
       Color(
         top.red + newBottom.red,
         top.green + newBottom.green,

@@ -1,5 +1,6 @@
 package dimages
 
+import breeze.linalg.{DenseMatrix, DenseVector}
 import cats.Functor
 
 object ColorEffects {
@@ -122,4 +123,55 @@ import cats.instances.function._
 
   }
 
+  object M {
+
+    import cats.syntax.flatMap._
+    import Image.imMonad
+
+    def whiteStripes(a: Image[Color]): Image[Color] =
+      a.flatMap(c => new Image({ loc =>
+        if (loc.x % 10 == 0) Color.White else c
+      }))
+
+    def xx(a: Image[Color]): Image[Color] =
+      a.flatMap(c => new Image({ loc =>
+        val x = loc.x
+        val y = loc.y
+        a.im(Loc(Math.tan(x) % 400, y))
+
+      }))
+
+    type Transformation = Loc => Loc
+
+    def translate(x: Double, y: Double): Loc => Loc = loc => {
+      val r = DenseMatrix((loc.x), (loc.y)) + DenseMatrix((x), (y))
+      Loc(r(0, 0), r(1, 0))
+    }
+
+    def rotate(a: Double): Loc => Loc = loc => {
+      val r = DenseMatrix((loc.x, loc.y)) * DenseMatrix((Math.cos(a), Math.sin(a)), (-Math.sin(a), Math.cos(a)))
+      Loc(r(0, 0), r(0, 1))
+    }
+
+    def scale(x: Double, y: Double): Loc => Loc = loc => {
+      val s = DenseMatrix((loc.x), (loc.y)).t * DenseMatrix((1/x, 0d), (0d, 1/y))
+
+      Loc(s.t.apply(0,0), s.t.apply(1, 0))
+    }
+
+
+    def transforms(image: Image[Color], ts: (Loc => Loc)*): Image[Color] = {
+      val t: Loc => Loc = ts.toList match {
+        case List() => a => a
+        case _ => ts.reverse.reduce[Loc => Loc] {
+          case (a, b) => a.compose(b)
+        }
+      }
+      image.flatMap(c => new Image({ loc =>
+        val newLoc = t(loc)
+        image.im(newLoc)
+      }))
+    }
+
+  }
 }
