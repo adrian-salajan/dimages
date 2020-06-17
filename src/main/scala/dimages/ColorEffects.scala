@@ -133,11 +133,30 @@ import cats.instances.function._
         if (loc.x % 10 == 0) Color.White else c
       }))
 
-    def xx(a: Image[Color]): Image[Color] =
+    def bands(a: Image[Color]): Image[Color] =
+      a.flatMap(c => new Image({ loc =>
+        a.im(Loc(loc.x, loc.y % 100))
+      }))
+
+    def swirl(a: Image[Color]): Image[Color] =
+      a.flatMap(c => new Image({ loc =>
+        val du = 300
+        val dv = 300
+        def theta(u: Double, v: Double) = (Math.PI * (Math.pow(Math.pow(u - du,2) + Math.pow(v - dv, 2), 0.5))) / 128
+        val t = theta(loc.x, loc.y)
+        def fx(u: Double, v: Double) = (u - du) * Math.cos(t) + (v - dv) * Math.sin(t) + du
+        def fy(u: Double, v: Double) = -(u - du) * Math.sin(t) + (v - dv) * Math.cos(t) + dv
+        val x = fx(loc.x, loc.y)
+        val y = fy(loc.x, loc.y)
+        a.im(Loc(x, y))
+      }))
+
+    def combine(a: Image[Color], b: Image[Color]): Image[Color] =
       a.flatMap(c => new Image({ loc =>
         val x = loc.x
-        val y = loc.y
-        a.im(Loc(Math.tan(x) % 400, y))
+        if (x < 300)
+          c
+        else b.im(loc)
 
       }))
 

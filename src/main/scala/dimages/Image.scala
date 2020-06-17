@@ -132,6 +132,10 @@ object Image {
 
 
     override def pure[A](x: A): Image[A] = Image.lift(x)
+
+//    def flatMapp[F[_], A, B](fa: F[A])(f: A => F[B]): F[B] = flatten(map(fa, f))
+//
+//    def flatten2[F[_], A](ffa: F[F[A]]): F[A] = flatMapp(ffa)(a => a)
   }
 
 

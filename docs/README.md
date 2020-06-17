@@ -105,13 +105,13 @@ Because `apply` also gets as input 2 `F`s and returns only one it means that it 
 So what is the difference? Formally none because we can write one in terms of the other + `pure`
 
 <pre>
-    def map2[F[_], A, B, C](fa: F[A], fb: F[B], f: (A, B) => C): F[C] = {
-      val one = ap(pure(f curried))(fa)
-      ap(one)(fb)
-    }
+def map2[F[_], A, B, C](fa: F[A], fb: F[B], f: (A, B) => C): F[C] = {
+  val one = ap(pure(f curried))(fa)
+  ap(one)(fb)
+}
 
-    def apply[A, B](ff: F[A => B])(fa: F[A]): F[B] =
-      map2(ff, fa)((f, a) => f(a))
+def apply[A, B](ff: F[A => B])(fa: F[A]): F[B] =
+  map2(ff, fa)((f, a) => f(a))
 </pre>
 
 So it's clear that both `map2` and `apply` know how to merge F contexts/effects, but what about the difference in signatures?
@@ -158,7 +158,93 @@ Disolve (creates a new images randomly taking color from A or B)
 
 
 ### Monad
-tbd
+[rotate]:https://github.com/adrian-salajan/dimages/blob/master/png/monad/rotate.png?raw=true
+[swirl]:https://github.com/adrian-salajan/dimages/blob/master/png/monad/swirl.png?raw=true
+[whiteStripes]:https://github.com/adrian-salajan/dimages/blob/master/png/monad/whiteStripes.png?raw=true
+[bands]:https://github.com/adrian-salajan/dimages/blob/master/png/monad/bands.png?raw=true
+[combine]:https://github.com/adrian-salajan/dimages/blob/master/png/monad/combine.png?raw=true
+
+A monad is composed of 3 things:
+1. A context/wrapper over a generic value A.
+2. A function which can wrap any value `A` with the context `F`. (A monad is also an applicative)
+3. either of the functions:
+ * flatMap `flatMap(fa: F[A], f: a => F[B]): F[B]`
+ * map + flatten `flatten(fa: F[F[A]]): F[A]`
+
+#### FlatMap
+This takes a value in a context and a function `f` from a value to a value in a context and returns its result.
+It seems a bit strange that `f` returns a `F[B]` not just a `B` (as the functor's map), so unlike the functor this is not
+just a simple transformation of `F[A]`, it's a transformation + a new `F` context effect.
+
+If applicative lets us merge effects then `flatMap` provides the ability to chain new effects having the original wrapped value as input.
+
+#### Flatten
+`flatten(fa: F[F[A]]): F[A]`
+
+This is merging effects. The difference from applicative, these are "serial" effects `F[F[A]]`
+while applicative merges parallel effects in `map2(a: F[A], b: F[B], f: (A, B) => C): F[C]`
+
+#### FlatMap vs Flatten
+
+These are equivalent
+
+<pre>
+def flatMap[F[_], A, B](fa: F[A])(f: A => F[B]): F[B] = flatten(map(fa, f))
+
+def flatten[F[_], A](ffa: F[F[A]]): F[A] = flatMap(ffa)(a => a)
+</pre>
+
+#### Monad on Images
+
+Before I implemented Monad on Images it was very unclear how it would be useful.
+
+with Image[Color] flapMap looks as
+`flatMap(fa: Image[Color], f: color => Image[Color]): Image[Color]`
+so given a color image, from each color build an image and somehow return a single image back? Well apparently yes.
+<pre>
+def flatMap[A, B](fa: Image[A])(f: A => Image[B]): Image[B] = new Image[B] ({
+      loc =>
+        val img: Image[B] = f(fa.im(loc))
+        img.im(loc)
+})
+</pre>
+
+The implementation returns a new image, which for each pixel/Location returns the color of f's Image[B] at that location,
+and since f has the power to build new images, it can decide each location what color it has, it can be the original input color or completely different.
+
+Functor and Applicative let us modify images by doing transformations only based on their colors,
+while Monad provides the ability to do transformations based on both color and location (or color at a location)
+
+This finally gives the power of doing geometric transformations on images, because we can access through location different parts of the image.
+
+Geometric transformations: rotate + scale + translate
+
+![rotate][rotate]
+
+Geometric transformation: swirl
+
+![swirl][swirl]
+
+Combine two images based on location (middle x axis)
+
+![combine][combine]
+
+Return different colors based on location (every X pixels return white instead of the original color)
+
+![whiteStripes][whiteStripes]
+
+Return colors of the same image but from other locations
+
+![bands][bands]
+
+
+
+
+
+
+
+
+
 
 
 

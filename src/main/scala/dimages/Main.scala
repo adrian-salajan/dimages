@@ -75,13 +75,17 @@ object Main {
 //    save[Color](Ap.disolve(bird, crayons), self, "applicative/disolve.png")
 
 
-    save[Color](M.whiteStripes(bird), self, "monad/whiteStripes.png")
-    save[Color](M.transforms(bird,
-      M.translate(-320, -213),
-      M.scale(2, 0.5),
-      M.rotate(45),
-      M.translate(320, 213),
-    ), self, "monad/rotate.png")
+//    save[Color](M.whiteStripes(bird), self, "monad/whiteStripes.png")
+//    save[Color](M.transforms(bird,
+//      M.translate(-320, -213),
+//      M.scale(2, 0.2),
+//      M.rotate(45),
+//      M.translate(320, 213),
+//    ), self, "monad/rotate.png")
+
+//    save[Color](M.combine(bird, crayons), self, "monad/combine.png")
+//    save[Color](M.swirl(bird), self, "monad/swirl.png")
+    save[Color](M.bands(bird), self, "monad/bands.png")
 
 
  }
