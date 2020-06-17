@@ -171,6 +171,7 @@ A monad is composed of 2 things:
 
 #### FlatMap
 `flatMap(fa: F[A], f: a => F[B]): F[B]`
+
 This takes a value in a context and a function `f` from a value to a value in a context and returns its result.
 It seems a bit strange that `f` returns a `F[B]` not just a `B` (as the functor's map), so unlike the functor this is not
 just a simple transformation of `F[A]`, it's a transformation + a new `F` context effect.
