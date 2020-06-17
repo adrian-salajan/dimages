@@ -27,9 +27,9 @@ to some value A. In order to have them rendered on the screen we need visual ima
 [threshold]:https://github.com/adrian-salajan/dimages/blob/master/png/functor/threshold.png?raw=true
 [ignore]:https://github.com/adrian-salajan/dimages/blob/master/png/functor/ignoreInputReplaceGreen.png?raw=true
 
-A functor is composed of 2 things
-1. A context/wrapper over a generic value A. In scala the context is a one-argument type constructor `F[A]`
-2. A map function that takes another function `f: A => B` as argument, which is applied on the `A` value inside the context Map will give back a `F[B]`. This allows transformation of the value in the context,
+A functor is composed of 1 thing
+
+1. A map function that takes another function `f: A => B` as argument, which is applied on the `A` value inside a `F[A]` context. Map will give back a `F[B]`. This allows transformation of the value in the context,
 while leaving the context untouched. Of course, map needs to apply `f` on some `F[A]`, so it has this argument as well:
 `def map(a: F[A], f: A => B): F[B]`
 
@@ -77,11 +77,10 @@ we can compose the functions into a single one `Color => Color`
 
 ### Applicative
 
-An applicative is composed of 3 things:
+An applicative is composed of 2 things:
 
-1. A context/wrapper over a generic value A.
-2. A function which can wrap any value `A` with the context `F`. `pure(a: A): F[A]`. So it must be that `pure` knows what the `F` context means. Very important.
-3. One of the two functions which are equivalent to each other (can rewrite one in terms of the other + `pure`):
+1. A function which can wrap any value `A` with the context `F`. `pure(a: A): F[A]`. So it must be that `pure` knows what the `F` context means. Very important.
+2. One of the two functions which are equivalent to each other (can rewrite one in terms of the other + `pure`):
     * `map2(a: F[A], b: F[B], f: (A, B) => C): F[C]`
     * `apply(a: F[A], f: F[A => B]): F[B]`
     
@@ -164,14 +163,14 @@ Disolve (creates a new images randomly taking color from A or B)
 [bands]:https://github.com/adrian-salajan/dimages/blob/master/png/monad/bands.png?raw=true
 [combine]:https://github.com/adrian-salajan/dimages/blob/master/png/monad/combine.png?raw=true
 
-A monad is composed of 3 things:
-1. A context/wrapper over a generic value A.
-2. A function which can wrap any value `A` with the context `F`. (A monad is also an applicative)
-3. either of the functions:
- * flatMap `flatMap(fa: F[A], f: a => F[B]): F[B]`
- * map + flatten `flatten(fa: F[F[A]]): F[A]`
+A monad is composed of 2 things:
+1. A function which can wrap any value `A` with the context `F`:  `pure(a: A): F[A]` (A monad is also an applicative)
+2. either of the functions:
+ * `flatMap(fa: F[A], f: a => F[B]): F[B]`
+ * map + `flatten(fa: F[F[A]]): F[A]`
 
 #### FlatMap
+`flatMap(fa: F[A], f: a => F[B]): F[B]`
 This takes a value in a context and a function `f` from a value to a value in a context and returns its result.
 It seems a bit strange that `f` returns a `F[B]` not just a `B` (as the functor's map), so unlike the functor this is not
 just a simple transformation of `F[A]`, it's a transformation + a new `F` context effect.
