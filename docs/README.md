@@ -200,7 +200,7 @@ Before I implemented Monad on Images it was very unclear how it would be useful.
 
 with Image[Color] flapMap looks as
 `flatMap(fa: Image[Color], f: color => Image[Color]): Image[Color]`
-so given a color image, from each color build an image and somehow return a single image back? Well apparently yes.
+so given a color image, from each color build an image and somehow return a single image back? Well apparently yes (all the "intermediary" images are flattened).
 <pre>
 def flatMap[A, B](fa: Image[A])(f: A => Image[B]): Image[B] = new Image[B] ({
       loc =>
@@ -213,7 +213,8 @@ The implementation returns a new image, which for each pixel/Location returns th
 and since f has the power to build new images, it can decide each location what color it has, it can be the original input color or completely different.
 
 Functor and Applicative let us modify images by doing transformations only based on their colors,
-while Monad provides the ability to do transformations based on both color and location (or color at a location)
+while Monad provides the ability to do transformations based on both color and location (or color at a location).
+This extra power comes through `f: Color => Image[Color]` and monads flattening of effects. 
 
 This finally gives the power of doing geometric transformations on images, because we can access through location different parts of the image.
 
@@ -236,6 +237,10 @@ Return different colors based on location (every X pixels return white instead o
 Return colors of the same image but from other locations
 
 ![bands][bands]
+
+
+### Comonad
+??? tbd
 
 
 
