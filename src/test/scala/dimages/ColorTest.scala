@@ -13,7 +13,7 @@ import scala.Option
 
 class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
 
-
+//wtf
   implicit val eqC: Eq[Color] = Eq.fromUniversalEquals
 
   import org.scalacheck.Arbitrary
