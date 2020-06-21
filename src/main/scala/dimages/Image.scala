@@ -4,7 +4,7 @@ package dimages
 import java.awt.image.BufferedImage
 
 import cats.kernel.Monoid
-import cats.{Applicative, Functor, Monad}
+import cats.{Applicative, Comonad, Functor, Monad}
 
 import scala.util.Try
 
@@ -56,12 +56,12 @@ object Image {
 
   def apply[A](a: A): Image[A] = imApplicative.pure(a)
 
-  def self: Image[Loc] = new Image({ a => a})
+  def self: Image[Loc] = new Image({ a => a })
 
   def load(b: BufferedImage): ImageC = new ImageC({
     loc: Loc => {
 
-      Try(//map out of bounds to black
+      Try( //map out of bounds to black
         {
           val c = new java.awt.Color(b.getRGB(loc.x.toInt, loc.y.toInt))
           Color(c.getRed.toFloat / 255, c.getGreen.toFloat / 255, c.getBlue.toFloat / 255, c.getAlpha.toFloat / 255)
@@ -70,14 +70,14 @@ object Image {
     }
   })
 
-  def monochrome[A](a: A): Image[A]= Image.lift(a)
+  def monochrome[A](a: A): Image[A] = Image.lift(a)
 
   implicit def imMonoid[A](implicit M: Monoid[A]): Monoid[Image[A]] = new Monoid[Image[A]] {
     override def empty: Image[A] = Image.lift(M.empty)
 
     override def combine(x: Image[A], y: Image[A]): Image[A] = {
       val c: A => A => A = (M.combine _).curried
-      val i  = Image.lift2(c)(x)(y)
+      val i = Image.lift2(c)(x)(y)
       i
     }
   }
@@ -107,38 +107,73 @@ object Image {
 
   }
   implicit val imMonad: Monad[Image] = new Monad[Image] {
-    override def flatMap[A, B](fa: Image[A])(f: A => Image[B]): Image[B] = new Image[B] ({
+    override def flatMap[A, B](fa: Image[A])(f: A => Image[B]): Image[B] = new Image[B]({
       loc =>
         val img: Image[B] = f(fa.im(loc))
         img.im(loc)
     })
 
-    override def tailRecM[A, B](a: A)(f: A => Image[Either[A, B]]): Image[B] = new Image[B]( {
-        loc =>
-          def rec(ab:Either[A, B]): B = ab match {
-            case Left(a) => rec(f(a).im(loc))
-            case Right(b) => b
-          }
+    override def tailRecM[A, B](a: A)(f: A => Image[Either[A, B]]): Image[B] = new Image[B]({
+      loc =>
+        def rec(ab: Either[A, B]): B = ab match {
+          case Left(a) => rec(f(a).im(loc))
+          case Right(b) => b
+        }
 
-          rec(f(a).im(loc))
+        rec(f(a).im(loc))
 
-//        f(a).im(loc) match {
-//          case Left(a) =>
-//            val x  = tailRecM(a)(f).im(loc)
-//            x
-//          case Right(b) => b
-//        }
+      //        f(a).im(loc) match {
+      //          case Left(a) =>
+      //            val x  = tailRecM(a)(f).im(loc)
+      //            x
+      //          case Right(b) => b
+      //        }
     })
 
 
     override def pure[A](x: A): Image[A] = Image.lift(x)
 
-//    def flatMapp[F[_], A, B](fa: F[A])(f: A => F[B]): F[B] = flatten(map(fa, f))
-//
-//    def flatten2[F[_], A](ffa: F[F[A]]): F[A] = flatMapp(ffa)(a => a)
+    //    def flatMapp[F[_], A, B](fa: F[A])(f: A => F[B]): F[B] = flatten(map(fa, f))
+    //
+    //    def flatten2[F[_], A](ffa: F[F[A]]): F[A] = flatMapp(ffa)(a => a)
   }
 
+  private implicit val imComonad = new Comonad[Image] {
+    override def extract[A](x: Image[A]): A = x.im(Loc(0, 0))
 
+    override def coflatMap[A, B](fa: Image[A])(f: Image[A] => B): Image[B] = {
+      val a = f(fa)
+      new Image[B]({
+        loc => a
+      })
+    }
+
+    override def map[A, B](fa: Image[A])(f: A => B): Image[B] = imFunctor.map(fa)(f)
+
+    override def coflatten[A](fa: Image[A]): Image[Image[A]] = new Image[Image[A]]({
+      loc =>
+        new Image[A]({loc2 => fa.im(loc2)})
+    })
+  }
+
+  def avg(i: Image[Color]): Color = {
+    val samples = for {
+      x <- Range(0, 500, 5)
+      y <- Range(0, 500, 5)
+    } yield (x, y)
+    val sampleSize = samples.size
+    val total = samples.map(n => i.im(Loc(n._1, n._2))).reduce((a, b) => a +! b)
+    Color(total.red / sampleSize, total.green / sampleSize, total.blue / sampleSize)
+  }
+
+  def brightest(i: Image[Color]): Color = {
+    val samples = for {
+      x <- Range(0, 500, 5)
+      y <- Range(0, 500, 5)
+    } yield (x, y)
+    val max = samples.map(n => i.im(Loc(n._1, n._2))).reduce((a, b) => if (a.brightness > b.brightness) a else b)
+    max
+  }
 
   def circle(x: Float, y: Float, radius: Float): Image[Boolean] = {
     import Math.pow

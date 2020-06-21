@@ -85,7 +85,15 @@ object Main {
 
 //    save[Color](M.combine(bird, crayons), self, "monad/combine.png")
 //    save[Color](M.swirl(bird), self, "monad/swirl.png")
-    save[Color](M.bands(bird), self, "monad/bands.png")
+//    save[Color](M.bands(bird), self, "monad/bands.png")
+//    save[Color](M.average(bird), self, "monad/average.png")
+
+
+    //comonad
+//    save[Color](CM.average(bird), self, "comonad/average.png")
+//    save[Color](CM.brightest(bird), self, "comonad/brightest.png")
+//    save[Color](CM.pick(bird, Loc(300, 180)), self, "comonad/pick.png")
+//    save[Color](CM.p(bird), self, "comonad/p.png")
 
 
  }

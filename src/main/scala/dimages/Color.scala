@@ -38,6 +38,7 @@ case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
   def - (a: Color): Color =  Color.applyf(this, a)((a, b) => Math.max(0f, a - b) )
 
   def + (a: Color): Color = Color.applyf(this, a)((a, b) => Math.min(1, a + b) )
+  def +! (a: Color): Color = Color.applyf(this, a)((a, b) => a + b)
 
 
   def overlay(a: Color): Color = Color.applyf(this, a)(overlay)

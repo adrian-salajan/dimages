@@ -192,5 +192,34 @@ import cats.instances.function._
       }))
     }
 
+    def average(a: Image[Color]): Image[Color] = {
+      a.flatMap(c => new Image[Color]({
+        loc => Image.avg(a)
+      }))
+    }
+  }
+
+  object CM {
+    import cats.syntax.coflatMap._
+    import cats.syntax.comonad._
+    import cats.syntax.functor._
+
+//    def point(a: Image[Color]): Color = a.extract
+//
+//    def average(a: Image[Color]): Image[Color] = a.coflatMap(Image.avg)
+//    def brightest(a: Image[Color]): Image[Color] = a.coflatMap(Image.brightest)
+//
+//    def pick(a: Image[Color], loc: Loc): Image[Color] = a.coflatMap(img => {
+//      img.im(loc)
+//    })
+//
+//    def p(a: Image[Color]): Image[Color] = {
+//      val im = a.coflatten
+//      val x = Image.imComonad.map(im)(imc => new Image[Color]({
+//        loc => if (loc.x % 100 == 0) Color.White else imc.im(loc)
+//      }))
+//      x.extract
+//    }
+
   }
 }
