@@ -4,7 +4,7 @@ import breeze.linalg.{DenseMatrix, DenseVector}
 import cats.Functor
 
 object ColorEffects {
-  object F{
+  object FunctorEffect{
     import cats.syntax.functor._
     import Image.imFunctor
     //functor
@@ -79,7 +79,7 @@ import cats.instances.function._
   }
 
   //applicative
-  object Ap {
+  object ApplicativeEffect {
     import cats.syntax.apply._
     import Image.imApplicative
 
@@ -97,9 +97,20 @@ import cats.instances.function._
       case (a, b) => a.overlay(b)
     }
 
+    def recolor(a: Image[Color], b: Image[Color]): Image[Color] =
+      a.map2(b) {
+      case (a, b) =>
+        Color(a.brightness * b.red, a.brightness * b.green, a.brightness * b.blue)
+    }
+
     def fill(a: Color): Image[Color] = {
       imApplicative.pure(a)
     }
+
+    def apply[A](img: Image[Color], colorEff: Image[Color => Color]): Image[Color] = {
+      imApplicative.ap(colorEff)(img)
+    }
+
 
     def colorify[A](img: Image[A], colorEff: Image[A => Color]): Image[Color] = {
       imApplicative.ap(colorEff)(img)
@@ -120,26 +131,38 @@ import cats.instances.function._
     def disolve(imga: Image[Color], imgb: Image[Color]): Image[Color] =
       overlapIf(imga, imgb, _ => Math.random() > 0.5)
 
+// how can this be done with Applicatives or monads ??
+//    def bandsFromOriginalImage(a: Image[Color]): Image[Color] = {
+//      val bands = new Image( loc =>
+//        a.im(Loc(loc.x, loc.y % 100))
+//      )
+//      bands
+//    }
+
+
+
+
 
   }
 
-  object M {
-
+  object MonadEffect {
     import cats.syntax.flatMap._
+    import cats.syntax.monad._
     import Image.imMonad
 
+    //by replacing color c with transparent can achieve the same effect with Applicative
     def whiteStripes(a: Image[Color]): Image[Color] =
       a.flatMap(c => new Image({ loc =>
         if (loc.x % 10 == 0) Color.White else c
       }))
 
-    def bands(a: Image[Color]): Image[Color] =
-      a.flatMap(c => new Image({ loc =>
+    def bandsFromOriginalImage(a: Image[Color]): Image[Color] =
+      a.flatMap(_ => new Image({ loc =>
         a.im(Loc(loc.x, loc.y % 100))
       }))
 
     def swirl(a: Image[Color]): Image[Color] =
-      a.flatMap(c => new Image({ loc =>
+      a.flatMap(_ => new Image({ loc =>
         val du = 300
         val dv = 300
         def theta(u: Double, v: Double) = (Math.PI * (Math.pow(Math.pow(u - du,2) + Math.pow(v - dv, 2), 0.5))) / 128
@@ -186,24 +209,35 @@ import cats.instances.function._
           case (a, b) => a.compose(b)
         }
       }
-      image.flatMap(c => new Image({ loc =>
+      image.flatMap(_ => new Image({ loc =>
         val newLoc = t(loc)
         image.im(newLoc)
       }))
     }
+
 
     def average(a: Image[Color]): Image[Color] = {
       a.flatMap(c => new Image[Color]({
         loc => Image.avg(a)
       }))
     }
+
+
+
+    def drawBorder(a: Image[Color]): Image[Color] = {
+      a.flatMap(Image.colorWithBlackBorder)
+    }
+
+    def drawCircle(a: Image[Color]): Image[Color] = {
+      a.flatMap(Image.redCircle(_, 300, 200, 250))
+    }
   }
 
-  object CM {
-    import cats.syntax.coflatMap._
-    import cats.syntax.comonad._
-    import cats.syntax.functor._
-
+//  object CM {
+//    import cats.syntax.coflatMap._
+//    import cats.syntax.comonad._
+//    import cats.syntax.functor._
+//
 //    def point(a: Image[Color]): Color = a.extract
 //
 //    def average(a: Image[Color]): Image[Color] = a.coflatMap(Image.avg)
@@ -213,13 +247,15 @@ import cats.instances.function._
 //      img.im(loc)
 //    })
 //
-//    def p(a: Image[Color]): Image[Color] = {
+//    def greyscale(a: Image[Color]): Image[Color] =Image.imComonad.map(a)(c => Color(c.brightness, c.brightness, c.brightness, 1))
+
+
+
 //      val im = a.coflatten
 //      val x = Image.imComonad.map(im)(imc => new Image[Color]({
 //        loc => if (loc.x % 100 == 0) Color.White else imc.im(loc)
 //      }))
 //      x.extract
-//    }
 
-  }
+//  }
 }

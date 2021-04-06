@@ -67,12 +67,13 @@ class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
   implicit def eqT[T]: Eq[T] = Eq.instance((ta, tb) => ta == tb)
   implicit  def eqLocT[T]: Eq[Loc => T] = catsLawsEqForFn1Exhaustive[Loc, T]
   implicit  def eqImgT[T]: Eq[Image[T]] = Eq.by[Image[T], Loc => T](img => img.im)
-  checkAll("Functor Laws", FunctorTests(Image.imFunctor).functor[Int, Int, String])
+
+//  checkAll("Functor Laws", FunctorTests(Image.imFunctor).functor[Int, Int, String])
 
   checkAll("Applicative laws", ApplicativeTests(Image.imApplicative).applicative[Int, Int, String])
 
 //  implicit val arbImageColor: Arbitrary[Image[Color]]
-  checkAll("Monad laws", MonadTests(Image.imMonad).monad[Int, Int, String])
+//  checkAll("Monad laws", MonadTests(Image.imMonad).monad[Int, Int, String])
 
 
 }
