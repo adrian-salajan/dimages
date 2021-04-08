@@ -225,7 +225,7 @@ import cats.instances.function._
 
 
     def drawBorder(a: Image[Color]): Image[Color] = {
-      a.flatMap(Image.colorWithBlackBorder)
+      a.flatMap(Image.addBlackBorder)
     }
 
     def drawCircle(a: Image[Color]): Image[Color] = {

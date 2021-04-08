@@ -231,22 +231,22 @@ object Image {
     imApplicative.ap(imApplicative.pure(circleProgram))(self)
   }
 
-  def colorWithBlackBorder(c: Color): Image[Color] = {
+  def addBlackBorder(c: Color): Image[Color] = {
     new Image[Color](loc =>
       if (loc.x <= 10 || loc.y <= 10 || loc.x >= 630 || loc.y >= 416)
         new Color(0f, 0f, 0f, c.alpha)
-      else
-        new Color(c.red, c.green, c.blue, c.alpha))
+      else c
+    )
   }
 
-  def redCircle(color: Color, x: Float, y: Float, radius: Float): Image[Color] = {
+  def redCircle(bg: Color, x: Float, y: Float, radius: Float): Image[Color] = {
     import Math.pow
     val circleProgram: Loc=> Color = { loc =>
       if (Color.aproxEq(
         (pow(loc.x - x, 2) + pow(loc.y - y, 2)).toFloat,
         pow(radius, 2).toFloat,
         300
-      )) Color.Red else color
+      )) Color.Red else bg
     }
 
     new Image[Color](loc => circleProgram(loc))
@@ -263,6 +263,7 @@ object Image {
       if (loc.y < 200) c else bg
     )
 }
+
 
 class ImageC(img: Loc => Color) extends Image[Color](img)
 

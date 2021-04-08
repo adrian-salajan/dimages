@@ -70,10 +70,10 @@ class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
 
 //  checkAll("Functor Laws", FunctorTests(Image.imFunctor).functor[Int, Int, String])
 
-  checkAll("Applicative laws", ApplicativeTests(Image.imApplicative).applicative[Int, Int, String])
+//  checkAll("Applicative laws", ApplicativeTests(Image.imApplicative).applicative[Int, Int, String])
 
 //  implicit val arbImageColor: Arbitrary[Image[Color]]
-//  checkAll("Monad laws", MonadTests(Image.imMonad).monad[Int, Int, String])
+  checkAll("Monad laws", MonadTests(Image.imMonad).monad[Int, Int, String])
 
 
 }

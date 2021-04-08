@@ -181,15 +181,27 @@ object Main {
           Image.redCircle(Color.Green, 300, 200, 200)
             .flatMap(Image.stripes(Color.White, _))
             .flatMap(Image.redCircle(_, 500, 110, 200))
-            .flatMap(Image.colorWithBlackBorder),
+            .flatMap(Image.addBlackBorder),
         identity, "monad/monad-border-and-circle.png")
+
+      save[Color](
+        Image.imMonad.pure(Color.Blue)
+          .flatMap(bg => Image.redCircle(bg, 200, 200, 200).flatMap(circleColor => Image.topHalf(circleColor, bg))),
+        identity, "monad/half-of-circle.png")
+
+       save[Color](
+        Image.imMonad.pure(Color.Blue)
+          .flatMap(bg => bird.flatMap(birdColor => Image.stripes(birdColor, bg))),
+        identity, "monad/stripes-from-bird-color.png")
 
       save[Color](
         bird.flatMap(birdColor => Image.redCircle(birdColor, 300, 200, 200).flatMap(circleColor => Image.topHalf(birdColor, circleColor)))
           .flatMap(imageUpUntilNowColor => crayons.flatMap(Image.stripes(_, imageUpUntilNowColor)).flatMap(Image.topHalf(_, imageUpUntilNowColor)))
           .flatMap(imageUpUntilNowColor => Image.redCircle(imageUpUntilNowColor, 500, 110, 200))
-          .flatMap(imageUpUntilNowColor => Image.colorWithBlackBorder(imageUpUntilNowColor)),
+          .flatMap(imageUpUntilNowColor => Image.addBlackBorder(imageUpUntilNowColor)),
         identity, "monad/birdie-border-and-circle.png")
+
+
 
 //      save[Color](MonadEffect.bandsFromOriginalImage(bird), identity, "monad/bands.png")
       //    save[Color](M.transforms(bird,
