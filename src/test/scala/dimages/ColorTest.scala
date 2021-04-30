@@ -2,8 +2,10 @@ package dimages
 
 import cats.kernel.Eq
 import cats.kernel.laws.discipline.MonoidTests
-import cats.laws.discipline.{ApplicativeTests, ExhaustiveCheck, FunctorTests, MonadTests}
+import cats.laws.discipline.{ApplicativeTests, ComonadTests, ExhaustiveCheck, FunctorTests, MonadTests}
+import org.scalacheck.ScalacheckShapeless.derivedCogen
 import org.scalactic.anyvals.PosInt
+import org.scalatest.Assertions
 import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatestplus.scalacheck.Checkers
 import org.typelevel.discipline.scalatest.FunSuiteDiscipline
@@ -53,9 +55,9 @@ class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
   import cats.instances.all._
   import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
   implicit val inteq: Eq[Int] = Eq.apply
-  implicit val stringeq: Eq[Int] = Eq.apply
+  implicit val stringeq: Eq[String] = Eq.apply
 
-  val doubles: List[Double] = List.unfold(0d)(s => if (s > 10d) Option.empty else Some((s + 0.4, s + 0.4)))
+  val doubles: List[Double] = List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
   val locations = for{
     a <- doubles
     b <- doubles
@@ -64,16 +66,75 @@ class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
 
   implicit val exCLoc: ExhaustiveCheck[Loc] = ExhaustiveCheck.instance(locations)
 
-  implicit def eqT[T]: Eq[T] = Eq.instance((ta, tb) => ta == tb)
+  implicit def eqT[T]: Eq[T] = Eq.fromUniversalEquals[T]
   implicit  def eqLocT[T]: Eq[Loc => T] = catsLawsEqForFn1Exhaustive[Loc, T]
   implicit  def eqImgT[T]: Eq[Image[T]] = Eq.by[Image[T], Loc => T](img => img.im)
+//  implicit  def eqImgT2[T]: Eq[Image[T]] = Eq.instance()
 
 //  checkAll("Functor Laws", FunctorTests(Image.imFunctor).functor[Int, Int, String])
 
 //  checkAll("Applicative laws", ApplicativeTests(Image.imApplicative).applicative[Int, Int, String])
 
 //  implicit val arbImageColor: Arbitrary[Image[Color]]
-  checkAll("Monad laws", MonadTests(Image.imMonad).monad[Int, Int, String])
+//  checkAll("Monad laws", MonadTests(Image.imMonad).monad[Int, Int, String])
+
+  implicit def cogenImage[A]: Cogen[Image[A]] =Cogen(_ => 3)
+  checkAll("CoMonad laws", ComonadTests(Image.imComonad).comonad[Int, Int, String])
+
+  test("comonad Left identity") {
+    val fa = new Image[Loc](identity)
+    val fb = Image.imComonad.coflatMap(fa)(Image.imComonad.extract)
+
+    val areEqual = for {
+      x <- 0 to 10
+      y <- 0 to 10
+    } yield fa.im(Loc(x, y)) == fb.im(Loc(x, y))
+
+    assert(!areEqual.contains(false))
+  }
+
+    test("comonad Right identity") {
+    val fa = new Image[Loc](identity)
+    val f37 = (a: Image[Loc]) => a.im(Loc(3, 7))
+    val fb = Image.imComonad.extract(Image.imComonad.coflatMap(fa)(f37))
+    val p37 = f37(fa)
+
+    assertResult(p37)(fb)
+  }
+
+//   fa.coflatten <-> fa.coflatMap(identity)
+  test("coflatten identity") {
+    import Image.imComonad
+    import cats.implicits._
+    val fa = new Image[Loc](identity)
+
+    val ffa = fa.coflatten
+    val ffa2 = fa.coflatMap(identity)
+
+    val areEqual = for {
+      x <- 0 to 10
+      y <- 0 to 10
+      loc = Loc(x, y)
+    } yield ffa.im(loc).im(loc) == ffa2.im(loc).im(loc)
+
+     assert(!areEqual.contains(false))
+  }
+
+  test("coflatten through map") {
+    import Image.imComonad
+    import cats.implicits._
+    val fa = new Image[Loc](identity)
+    val ffa = fa.coflatten.coflatten
+    val ffaViaMAp = fa.coflatten.map(_.coflatten)
+
+     val areEqual = for {
+      x <- 0 to 10
+      y <- 0 to 10
+      loc = Loc(x, y)
+    } yield ffa.im(loc).im(loc).im(loc) == ffaViaMAp.im(loc).im(loc).im(loc)
+
+     assert(!areEqual.contains(false))
+  }
 
 
 }

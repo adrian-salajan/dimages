@@ -2,10 +2,10 @@ package dimages
 
 
 import java.awt.image.BufferedImage
-
 import cats.kernel.Monoid
-import cats.{Applicative, Functor, Monad}
+import cats.{Applicative, Comonad, Functor, Monad}
 
+import scala.annotation.tailrec
 import scala.util.Try
 
 class Image[A](val im: Loc => A) {
@@ -138,23 +138,19 @@ object Image {
 
     override def tailRecM[A, B](a: A)(f: A => Image[Either[A, B]]): Image[B] = new Image[B]({
       loc =>
+        @tailrec
         def rec(ab: Either[A, B]): B = ab match {
           case Left(a) => rec(f(a).im(loc))
           case Right(b) => b
         }
 
         rec(f(a).im(loc))
-
-      //        f(a).im(loc) match {
-      //          case Left(a) =>
-      //            val x  = tailRecM(a)(f).im(loc)
-      //            x
-      //          case Right(b) => b
-      //        }
     })
 
 
-    override def pure[A](x: A): Image[A] = Image.lift(x)
+    override def pure[A](x: A): Image[A] = new Image[A]({
+      _: Loc => x
+    })
 
       //equivalence of flatMap VS map+flatten
       def flatMapViaMapAndFlatten[A, B](fa: Image[A])(f: A => Image[B]): Image[B] = flattenImpl(mapImpl(fa)(f))
@@ -173,31 +169,33 @@ object Image {
 
   }
 
-//   implicit val imComonad: Comonad[Image] = new Comonad[Image] {
-//    override def extract[A](x: Image[A]): A = x.im(Loc(20, 20))
-//
-//    override def coflatMap[A, B](fa: Image[A])(f: Image[A] => B): Image[B] = {
-//      val a = f(fa)
-//      new Image[B]({
-//        loc => a
-//      })
-//    }
-//
-//    override def map[A, B](fa: Image[A])(f: A => B): Image[B] = //imFunctor.map(fa)(f)
-//    {
-//      val iib = coflatMap(fa)(imga => new Image[B]({
-//        loc => f(imga.im(loc))
-//      }))
-//      extract(iib)
-//    }
-//
-//    override def coflatten[A](fa: Image[A]): Image[Image[A]] = new Image[Image[A]]({
-//      loc =>
-//        new Image[A]({loc2 =>
-//          fa.im(Loc(loc.x + loc2.x, loc.y + loc2.y))
-//        })
-//    })
-//  }
+   implicit val imComonad: Comonad[Image] = new Comonad[Image] {
+    override def extract[A](x: Image[A]): A = x.im(Loc(0, 0))
+
+    override def coflatMap[A, B](fa: Image[A])(f: Image[A] => B): Image[B] = {
+      new Image[B](lb =>
+        f(
+          new Image[A](la =>
+            fa.im(Loc(lb.x + la.x, lb.y + la.y))//lb = left identity, la = right identity
+          )
+        )
+      )
+    }
+
+    override def map[A, B](fa: Image[A])(f: A => B): Image[B] =
+    {
+      new Image[B](
+        loc => f(fa.im(loc))
+      )
+    }
+
+    override def coflatten[A](fa: Image[A]): Image[Image[A]] =
+      new Image[Image[A]] (
+        la => new Image[A](
+          lb => fa.im(Loc(lb.x + la.x, lb.y + la.y))
+        )
+      )
+  }
 
   def avg(i: Image[Color]): Color = {
     val samples = for {
