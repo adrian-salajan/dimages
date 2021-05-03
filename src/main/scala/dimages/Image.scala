@@ -172,32 +172,41 @@ object Image {
   }
 
    implicit val imComonad: Comonad[Image] = new Comonad[Image] {
-    override def extract[A](x: Image[A]): A = x.im(Loc(0, 0))
+     override def extract[A](x: Image[A]): A = x.im(Loc(0, 0))
 
-    override def coflatMap[A, B](fa: Image[A])(f: Image[A] => B): Image[B] = {
-      new Image[B](lb =>
-        f(
-          new Image[A](la =>
-            fa.im(Loc(lb.x + la.x, lb.y + la.y))//lb = left identity, la = right identity
-          )
-        )
-      )
-    }
+     override def coflatMap[A, B](fa: Image[A])(f: Image[A] => B): Image[B] = {
+       new Image[B](lb =>
+         f(
+           new Image[A](la =>
+             fa.im(Loc(lb.x + la.x, lb.y + la.y)) //lb = left identity, la = right identity
+           )
+         )
+       )
+     }
 
-    override def map[A, B](fa: Image[A])(f: A => B): Image[B] =
-    {
-      new Image[B](
-        loc => f(fa.im(loc))
-      )
-    }
+     override def map[A, B](fa: Image[A])(f: A => B): Image[B] = {
+       coflatMap(fa)(img => f(extract(img)))
+     }
 
-    override def coflatten[A](fa: Image[A]): Image[Image[A]] =
+      //Comonad definition based on map and coflatten
+     def mapImpl[A, B](fa: Image[A])(f: A => B): Image[B] = {
+       new Image[B](
+         loc => f(fa.im(loc))
+       )
+     }
+
+    def coflattenImpl[A](fa: Image[A]): Image[Image[A]] =
       new Image[Image[A]] (
-        la => new Image[A](
-          lb => fa.im(Loc(lb.x + la.x, lb.y + la.y))
-        )
+         la => new Image[A](
+           lb => fa.im(Loc(lb.x + la.x, lb.y + la.y))
+         )
       )
-  }
+
+     def coflatMapViaCoflatten[A, B](fa: Image[A])(f: Image[A] => B): Image[B] =
+       mapImpl(coflattenImpl(fa))(f)
+
+   }
+
 
   def regionAverage(i: Image[Color], width: Int, height: Int): Color = {
     val samples = for {
@@ -242,13 +251,6 @@ object Image {
 
       def /(scalar: Double) =
         ColorAreaMatrix(red / scalar, green / scalar, blue / scalar)
-
-      implicit class NonMatrixMult(a: DenseMatrix[Double]) extends AnyRef {
-        def !*(other: DenseMatrix[Double]) = {
-          val mult = a.toArray.zip(other.toArray).map { case (a, b) => a * b }
-          new DenseMatrix[Double](a.cols, a.rows, mult, 0)
-        }
-      }
 
     }
 

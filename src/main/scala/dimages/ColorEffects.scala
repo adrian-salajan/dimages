@@ -249,6 +249,7 @@ import cats.instances.function._
         img.im(Loc(x, y))
       )
 
+
     def brightest(a: Image[Color], width: Int, height: Int): Image[Color] =
       a.coflatMap(Image.regionBrightest(_, width, height)
     )
@@ -256,64 +257,71 @@ import cats.instances.function._
     def enhanceContrast(a: Image[Color], width: Int, height: Int): Image[Color] = {
 
       a.coflatMap { img =>
-        val avg = Image.regionAverage(img, width, height).brightness
+        val avg = Image.regionAverage(img, width, height)
         val local = Image.imComonad.extract(img)
-        if (local.brightness > avg) {
-          print(true)
+        val localB = local.brightness
+        val avgB = avg.brightness
+        val diff = localB - avgB
+        val diff2 = avgB - localB
+        val factor1 =  (1.2 * diff)
+        val factor2 =  (1.2 * diff2)
+        if (local.brightness > avg.brightness) {
           Color(
-            Math.max(local.red * 1.3, 1),
-            Math.max(local.green * 1.3, 1),
-            Math.max(local.blue * 1.3, 1),
+            Math.min(local.red + factor1 , 1),
+            Math.min(local.green + factor1, 1),
+            Math.min(local.blue + factor1, 1),
             1f
           )
-        } else
+        } else {
           Color(
-            local.red * 0.5,
-            local.green * 0.5,
-            local.blue * 0.5,
+            Math.max(0 , local.red - factor2),
+            Math.max(0 ,local.green - factor2),
+            Math.max(0 ,local.blue - factor2),
             1f
           )
+        }
       }
     }
 
-      def convolution(a: Image[Color], kernel: DenseMatrix[Double], divisor: Double = 1): Color = {
-//        val sumKernel = kernel.toArray.map(Math.signum).sum
-//        val F = if (sumKernel == 0) 1 else sumKernel
+      def convolution(a: Image[Color], kernel: DenseMatrix[Double]): Color = {
+        val sumKernel = kernel.toArray.sum
+        val F = if (sumKernel == 0) 1 else sumKernel
 
         val convolutedChannels = Image.matrix(a, kernel.cols, kernel.rows) !* kernel
 
-        val red = convolutedChannels.red.toArray.sum / divisor
-        val green = convolutedChannels.green.toArray.sum / divisor
-        val blue = convolutedChannels.blue.toArray.sum / divisor
-        Color(red, green, blue)
+        val red = convolutedChannels.red.toArray.sum / F
+        val green = convolutedChannels.green.toArray.sum / F
+        val blue = convolutedChannels.blue.toArray.sum / F
+         Color(
+         red,
+           green,
+           blue
+        )
+      }
+
+    def convolutionThreshhold(a: Image[Color], kernel: DenseMatrix[Double]): Color = {
+        val sumKernel = kernel.toArray.sum
+        val F = if (sumKernel == 0) 1 else sumKernel
+
+        val convolutedChannels = Image.matrix(a, kernel.cols, kernel.rows) !* kernel
+
+        val red = Math.min(1, convolutedChannels.red.toArray.sum / F)
+        val green = Math.min(1, convolutedChannels.green.toArray.sum / F)
+        val blue = Math.min(1, convolutedChannels.blue.toArray.sum / F)
+        Color(
+          Math.max(red, 0.1d),
+          Math.max(green, 0.1d),
+          Math.max(blue, 0.1d),
+        )
       }
       def gausianBlur(a: Image[Color]) =
         a.coflatMap(img => convolution(img, Image.gausianBlur))
-          .coflatMap(img => convolution(img, Image.gausianBlur))
 
      def edgeDetect(a: Image[Color]) =
         Image.imComonad.map(a)(_.toGray).coflatMap(img => convolution(img, Image.edgeDetect))
 
      def emboss(a: Image[Color]) =
-         a.coflatMap(img => convolution(img, Image.emboss))
+         a.coflatMap(img => convolutionThreshhold(img, Image.emboss))
 
-
-
-
-      //    def brightest(a: Image[Color]): Image[Color] = a.coflatMap(Image.brightest)
-      //
-      //    def pick(a: Image[Color], loc: Loc): Image[Color] = a.coflatMap(img => {
-      //      img.im(loc)
-      //    })
-      //
-      //    def greyscale(a: Image[Color]): Image[Color] =Image.imComonad.map(a)(c => Color(c.brightness, c.brightness, c.brightness, 1))
-      //
-      //
-      //
-      //      val im = a.coflatten
-      //      val x = Image.imComonad.map(im)(imc => new Image[Color]({
-      //        loc => if (loc.x % 100 == 0) Color.White else imc.im(loc)
-      //      }))
-      //      x.extract
     }
 }
