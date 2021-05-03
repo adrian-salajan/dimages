@@ -216,11 +216,11 @@ import cats.instances.function._
     }
 
 
-    def average(a: Image[Color]): Image[Color] = {
-      a.flatMap(c => new Image[Color]({
-        loc => Image.avg(a)
-      }))
-    }
+//    def average(a: Image[Color]): Image[Color] = {
+//      a.flatMap(c => new Image[Color]({
+//        loc => Image.avg(a)
+//      }))
+//    }
 
 
 
@@ -233,29 +233,87 @@ import cats.instances.function._
     }
   }
 
-//  object CM {
+  object ComonadEffects {
 //    import cats.syntax.coflatMap._
 //    import cats.syntax.comonad._
-//    import cats.syntax.functor._
-//
-//    def point(a: Image[Color]): Color = a.extract
-//
-//    def average(a: Image[Color]): Image[Color] = a.coflatMap(Image.avg)
-//    def brightest(a: Image[Color]): Image[Color] = a.coflatMap(Image.brightest)
-//
-//    def pick(a: Image[Color], loc: Loc): Image[Color] = a.coflatMap(img => {
-//      img.im(loc)
-//    })
-//
-//    def greyscale(a: Image[Color]): Image[Color] =Image.imComonad.map(a)(c => Color(c.brightness, c.brightness, c.brightness, 1))
+    import cats.implicits._
+
+    def point(a: Image[Color]): Color = a.extract
+
+
+    def average(a: Image[Color], squareSizeInPixels: Int): Image[Color] =
+      a.coflatMap(img => Image.regionAverage(img, squareSizeInPixels, squareSizeInPixels))
+
+    def translate(a: Image[Color], x: Int, y: Int): Image[Color] =
+      a.coflatMap(img =>
+        img.im(Loc(x, y))
+      )
+
+    def brightest(a: Image[Color], width: Int, height: Int): Image[Color] =
+      a.coflatMap(Image.regionBrightest(_, width, height)
+    )
+
+    def enhanceContrast(a: Image[Color], width: Int, height: Int): Image[Color] = {
+
+      a.coflatMap { img =>
+        val avg = Image.regionAverage(img, width, height).brightness
+        val local = Image.imComonad.extract(img)
+        if (local.brightness > avg) {
+          print(true)
+          Color(
+            Math.max(local.red * 1.3, 1),
+            Math.max(local.green * 1.3, 1),
+            Math.max(local.blue * 1.3, 1),
+            1f
+          )
+        } else
+          Color(
+            local.red * 0.5,
+            local.green * 0.5,
+            local.blue * 0.5,
+            1f
+          )
+      }
+    }
+
+      def convolution(a: Image[Color], kernel: DenseMatrix[Double], divisor: Double = 1): Color = {
+//        val sumKernel = kernel.toArray.map(Math.signum).sum
+//        val F = if (sumKernel == 0) 1 else sumKernel
+
+        val convolutedChannels = Image.matrix(a, kernel.cols, kernel.rows) !* kernel
+
+        val red = convolutedChannels.red.toArray.sum / divisor
+        val green = convolutedChannels.green.toArray.sum / divisor
+        val blue = convolutedChannels.blue.toArray.sum / divisor
+        Color(red, green, blue)
+      }
+      def gausianBlur(a: Image[Color]) =
+        a.coflatMap(img => convolution(img, Image.gausianBlur))
+          .coflatMap(img => convolution(img, Image.gausianBlur))
+
+     def edgeDetect(a: Image[Color]) =
+        Image.imComonad.map(a)(_.toGray).coflatMap(img => convolution(img, Image.edgeDetect))
+
+     def emboss(a: Image[Color]) =
+         a.coflatMap(img => convolution(img, Image.emboss))
 
 
 
-//      val im = a.coflatten
-//      val x = Image.imComonad.map(im)(imc => new Image[Color]({
-//        loc => if (loc.x % 100 == 0) Color.White else imc.im(loc)
-//      }))
-//      x.extract
 
-//  }
+      //    def brightest(a: Image[Color]): Image[Color] = a.coflatMap(Image.brightest)
+      //
+      //    def pick(a: Image[Color], loc: Loc): Image[Color] = a.coflatMap(img => {
+      //      img.im(loc)
+      //    })
+      //
+      //    def greyscale(a: Image[Color]): Image[Color] =Image.imComonad.map(a)(c => Color(c.brightness, c.brightness, c.brightness, 1))
+      //
+      //
+      //
+      //      val im = a.coflatten
+      //      val x = Image.imComonad.map(im)(imc => new Image[Color]({
+      //        loc => if (loc.x % 100 == 0) Color.White else imc.im(loc)
+      //      }))
+      //      x.extract
+    }
 }

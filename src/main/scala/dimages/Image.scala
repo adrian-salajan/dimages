@@ -1,6 +1,8 @@
 package dimages
 
 
+import breeze.linalg.DenseMatrix
+
 import java.awt.image.BufferedImage
 import cats.kernel.Monoid
 import cats.{Applicative, Comonad, Functor, Monad}
@@ -64,7 +66,7 @@ object Image {
       Try( //map out of bounds to black
         {
           val c = new java.awt.Color(b.getRGB(loc.x.toInt, loc.y.toInt))
-          Color(c.getRed.toFloat / 255, c.getGreen.toFloat / 255, c.getBlue.toFloat / 255, c.getAlpha.toFloat / 255)
+          Color(c.getRed.toDouble / 255, c.getGreen.toDouble / 255, c.getBlue.toDouble / 255, c.getAlpha.toDouble / 255)
         }
       ).fold(_ => Color.Black, c => c)
     }
@@ -197,24 +199,127 @@ object Image {
       )
   }
 
-  def avg(i: Image[Color]): Color = {
+  def regionAverage(i: Image[Color], width: Int, height: Int): Color = {
     val samples = for {
-      x <- Range(0, 500, 5)
-      y <- Range(0, 500, 5)
+      x <- rangeCenter0(width)
+      y <- rangeCenter0(height)
     } yield (x, y)
-    val sampleSize = samples.size
-    val total = samples.map(n => i.im(Loc(n._1, n._2))).reduce((a, b) => a +! b)
-    Color(total.red / sampleSize, total.green / sampleSize, total.blue / sampleSize)
+    val total = samples
+      .map(loc => i.im(Loc(loc._1, loc._2)))
+
+    colorAverage(total.toList)
   }
 
-  def brightest(i: Image[Color]): Color = {
+  def colorAverage(color: List[Color]): Color = {
+    val newRed = channelColorAverage(color.map(_.red).toArray)
+    val newGreen = channelColorAverage(color.map(_.green).toArray)
+    val newBlue = channelColorAverage(color.map(_.blue).toArray)
+    Color(newRed, newGreen, newBlue)
+  }
+
+  def channelColorAverage(channelToAverage: Array[Double]): Double = {
+    Math.sqrt(
+      channelToAverage.map(Math.pow(_, 2)).sum / channelToAverage.length
+    )
+  }
+
+  def channelColorAverage2(channelToAverage: Array[Double]): Double = {
+    channelToAverage.sum / channelToAverage.length
+  }
+
+  def regionBrightest(i: Image[Color], width: Int, height: Int): Color = {
     val samples = for {
-      x <- Range(0, 500, 5)
-      y <- Range(0, 500, 5)
+      x <- if (width < 2 ) Range(0, width, 1) else Range(0 - width / 2, width / 2 , 1)
+      y <- if (height < 2) Range(0, height, 1) else Range(0 - height / 2, height / 2, 1)
     } yield (x, y)
     val max = samples.map(n => i.im(Loc(n._1, n._2))).reduce((a, b) => if (a.brightness > b.brightness) a else b)
     max
   }
+
+    case class ColorAreaMatrix(red: DenseMatrix[Double], green: DenseMatrix[Double], blue: DenseMatrix[Double]) {
+      def !*(kernel: DenseMatrix[Double]) =
+        ColorAreaMatrix(red *:* kernel, green *:* kernel, blue *:* kernel)
+
+      def /(scalar: Double) =
+        ColorAreaMatrix(red / scalar, green / scalar, blue / scalar)
+
+      implicit class NonMatrixMult(a: DenseMatrix[Double]) extends AnyRef {
+        def !*(other: DenseMatrix[Double]) = {
+          val mult = a.toArray.zip(other.toArray).map { case (a, b) => a * b }
+          new DenseMatrix[Double](a.cols, a.rows, mult, 0)
+        }
+      }
+
+    }
+
+    def matrix(a: Image[Color], width: Int, height: Int): ColorAreaMatrix = {
+      val samples = for {
+        x <- rangeCenter0(width)
+        y <- rangeCenter0(height)
+      } yield a.im(Loc(x, y))
+      val areaRed = new DenseMatrix[Double](height, width, samples.map(_.red), 0)
+      val areaGreen = new DenseMatrix[Double](height, width, samples.map(_.green), 0)
+      val areaBlue= new DenseMatrix[Double](height, width, samples.map(_.blue), 0)
+      ColorAreaMatrix(areaRed, areaGreen, areaBlue)
+    }
+
+    val id = new DenseMatrix[Double](
+    3,
+    3,
+    Array[Double](0, 0, 0, 0, 1, 0, 0, 0, 0), 0
+  )
+
+  val gausianBlur = new DenseMatrix[Double](
+    3,
+    3,
+    Array[Double](1, 2, 1, 2, 4, 2, 1, 2, 1), 0
+  ) *= 1d/16
+
+    val edgeDetect = new DenseMatrix[Double](
+    3,
+    3,
+    Array[Double](
+      0, -1, 0,
+      -1, 4, -1,
+      0, -1, 0), 0
+  ) *= 1d/32
+
+      val edgeDetect2= new DenseMatrix[Double](
+    3,
+    3,
+    Array[Double](
+      -1, 0, 2,
+      -2, 0, 2,
+      -1, 0, 1), 0
+  ) *= 1d/8
+
+        val emboss= new DenseMatrix[Double](
+    3,
+    3,
+    Array[Double](
+      -2, -1, 0,
+      -1, 1, 1,
+      0, 1, 2), 0
+  )
+
+  private def rangeCenter0(length: Int): Array[Int] =
+    length match {
+      case 1 => Array[Int](0)
+      case 2 => Array[Int](-1, 0)
+      case odd if odd % 2 == 1 => Range(-((odd-1)/2), (odd-1) / 2).inclusive.toArray
+      case even => Range(-even / 2, even / 2).toArray
+    }
+
+
+
+
+//    def regionEnhanceContrast(i: Image[Color], width: Int, height: Int): Color = {
+//    val samples = for {
+//      x <- Range(0, width, 1)
+//      y <- Range(0, height, 1)
+//    } yield (x, y)
+//    val c = if (i.im(Loc))
+//  }
 
   def circle(x: Float, y: Float, radius: Float): Image[Boolean] = {
     import Math.pow

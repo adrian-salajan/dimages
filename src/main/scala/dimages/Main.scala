@@ -32,7 +32,8 @@ object Main {
     import ColorEffects._
 //    runFunctorEffects()
 //    runApplicativeEffects()
-      runMonadEffects()
+//      runMonadEffects()
+    runComonadEffects()
 
 
 
@@ -214,6 +215,36 @@ object Main {
       //    save[Color](M.combine(bird, crayons), identity, "monad/combine.png")
       //    save[Color](M.swirl(bird), identity, "monad/swirl.png")
       //    save[Color](M.average(bird), identity, "monad/average.png")
+    }
+
+    def runComonadEffects(): Unit = {
+//      save[Color](ComonadEffects.average(bird,1), identity, "comonad/average-1px.png")
+//      save[Color](ComonadEffects.average(bird,4), identity, "comonad/average-4px.png")
+//      save[Color](ComonadEffects.average(bird,16), identity, "comonad/average-16px.png")
+
+//      save[Color](
+//          ComonadEffects.translate(bird,200, 200),
+//          identity, "comonad/translate-200-200.png")
+//      save[Color](
+//        ComonadEffects.translate(bird,-200, -200),
+//        identity, "comonad/translate-minus-200-200.png")
+//
+//        save[Color](
+//          ComonadEffects.brightest(bird,20, 20),
+//          identity, "comonad/brightest-20x20.png")
+
+
+//      save[Color](
+//          ComonadEffects.gausianBlur(bird),
+//          identity, "comonad/gausian_blur.png")
+//
+//          save[Color](
+//          ComonadEffects.edgeDetect(bird),
+//          identity, "comonad/edge_detect.png")
+
+           save[Color](
+          ComonadEffects.emboss(bird),
+          identity, "comonad/emboss.png")
     }
  }
 

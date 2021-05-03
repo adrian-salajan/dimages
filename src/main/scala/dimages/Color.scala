@@ -3,10 +3,10 @@ package dimages
 import cats.kernel.Monoid
 
 
-case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
+case class Color(red: Double, green: Double, blue: Double, alpha: Double) {
   def isWhiteish: Boolean = isGrayish && brightness > 0.85
 
-  val brightness: Float = (red + green + blue) / 3
+  val brightness: Double = Math.sqrt((red*red + green*green + blue*blue) / 3)
 
   val toInt: Int = (((alpha * 255).toInt & 0xFF) << 24) |
     (((red * 255).toInt & 0xFF) << 16) |
@@ -34,7 +34,6 @@ case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
   }
 
 
-
   def - (a: Color): Color =  Color.applyf(this, a)((a, b) => Math.max(0f, a - b) )
 
   def + (a: Color): Color = Color.applyf(this, a)((a, b) => Math.min(1, a + b) )
@@ -45,7 +44,7 @@ case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
 
 
 
-  private def overlay(a: Float, b: Float): Float =
+  private def overlay(a: Double, b: Double): Double =
     if (a < 0.5) 2*a*b
     else 1-2*(1-a)*(1-b)
 
@@ -53,7 +52,7 @@ case class Color(red: Float, green: Float, blue: Float, alpha: Float) {
 
 
 object Color {
-  def apply(r: Float, g: Float, b: Float): Color = Color(r ,g ,b, 1)
+  def apply(r: Double, g: Double, b: Double): Color = Color(r ,g ,b, 1)
   val Clear: Color = Color(0, 0, 0, 0)
   val Black: Color = Color(0, 0, 0, 1)
   val White: Color = Color(1, 1, 1, 1)
@@ -61,7 +60,7 @@ object Color {
   val Green: Color = Color(0, 1, 0, 1)
   val Blue: Color = Color(0, 0, 1, 1)
 
-  def applyf(a: Color, b: Color)(f: (Float, Float) => Float): Color =
+  def applyf(a: Color, b: Color)(f: (Double, Double) => Double): Color =
     Color(
       f(a.red, b.red),
       f(a.green, b.green),
@@ -69,20 +68,20 @@ object Color {
       1
     )
 
-  def aproxEq(a: Float, b: Float, tolerance: Float): Boolean = {
+  def aproxEq(a: Double, b: Double, tolerance: Double): Boolean = {
     if (a == b) true
     else if (a < b) a + tolerance >= b
     else b + tolerance >= a
   }
 
-  def mono(f: Float): Color = Color(f, f, f, 1)
+  def mono(f: Double): Color = Color(f, f, f, 1)
 
   implicit val colorMonoidConal: Monoid[Color] =  new Monoid[Color] {
     override def empty: Color = Color.Clear
 
 // ??   overC top bot = top ^+^ (1 - colorA top) *^ bot
     override def combine(top: Color, bottom: Color): Color = {
-      val s: Float = 1 - top.alpha
+      val s: Double = 1 - top.alpha
       val newBottom = Color(bottom.red * s, bottom.green * s, bottom.blue * s, bottom.alpha * s)
       Color(
         top.red + newBottom.red,
