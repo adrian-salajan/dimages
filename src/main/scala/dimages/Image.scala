@@ -213,10 +213,10 @@ object Image {
       x <- rangeCenter0(width)
       y <- rangeCenter0(height)
     } yield (x, y)
-    val total = samples
+    val pixels = samples
       .map(loc => i.im(Loc(loc._1, loc._2)))
 
-    colorAverage(total.toList)
+    colorAverage(pixels.toList)
   }
 
   def colorAverage(color: List[Color]): Color = {
@@ -254,7 +254,7 @@ object Image {
 
     }
 
-    def matrix(a: Image[Color], width: Int, height: Int): ColorAreaMatrix = {
+    def extractSubImage(a: Image[Color], width: Int, height: Int): ColorAreaMatrix = {
       val samples = for {
         x <- rangeCenter0(width)
         y <- rangeCenter0(height)
@@ -284,7 +284,7 @@ object Image {
       0, -1, 0,
       -1, 4, -1,
       0, -1, 0), 0
-  ) *= 1d/32
+  ) *= 1d/20
 
       val edgeDetect2= new DenseMatrix[Double](
     3,
@@ -295,13 +295,13 @@ object Image {
       -1, 0, 1), 0
   ) *= 1d/8
 
-        val emboss= new DenseMatrix[Double](
-    3,
-    3,
+  val emboss= new DenseMatrix[Double](
+    rows = 3,
+    cols = 3,
     Array[Double](
       -2, -1, 0,
       -1, 1, 1,
-      0, 1, 2), 0
+      0, 1, 2)
   )
 
   private def rangeCenter0(length: Int): Array[Int] =

@@ -250,6 +250,7 @@ import cats.instances.function._
       )
 
 
+
     def brightest(a: Image[Color], width: Int, height: Int): Image[Color] =
       a.coflatMap(Image.regionBrightest(_, width, height)
     )
@@ -263,8 +264,8 @@ import cats.instances.function._
         val avgB = avg.brightness
         val diff = localB - avgB
         val diff2 = avgB - localB
-        val factor1 =  (1.2 * diff)
-        val factor2 =  (1.2 * diff2)
+        val factor1 =  (4 * diff)
+        val factor2 =  (4 * diff2)
         if (local.brightness > avg.brightness) {
           Color(
             Math.min(local.red + factor1 , 1),
@@ -287,7 +288,7 @@ import cats.instances.function._
         val sumKernel = kernel.toArray.sum
         val F = if (sumKernel == 0) 1 else sumKernel
 
-        val convolutedChannels = Image.matrix(a, kernel.cols, kernel.rows) !* kernel
+        val convolutedChannels = Image.extractSubImage(a, kernel.cols, kernel.rows) !* kernel
 
         val red = convolutedChannels.red.toArray.sum / F
         val green = convolutedChannels.green.toArray.sum / F
@@ -303,7 +304,7 @@ import cats.instances.function._
         val sumKernel = kernel.toArray.sum
         val F = if (sumKernel == 0) 1 else sumKernel
 
-        val convolutedChannels = Image.matrix(a, kernel.cols, kernel.rows) !* kernel
+        val convolutedChannels = Image.extractSubImage(a, kernel.cols, kernel.rows) !* kernel
 
         val red = Math.min(1, convolutedChannels.red.toArray.sum / F)
         val green = Math.min(1, convolutedChannels.green.toArray.sum / F)
