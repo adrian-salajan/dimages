@@ -40,6 +40,11 @@ class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
   implicit val arbImageInt: Arbitrary[Image[Int]] = Arbitrary(
     Arbitrary.arbInt.arbitrary.map(in => new Image[Int]({ loc => in + (loc.x + loc.y).toInt}))
   )
+
+    implicit val arbImageIntXY: Arbitrary[Imagexy[Int]] = Arbitrary(
+    Arbitrary.arbInt.arbitrary.map(in => new Imagexy[Int]({ loc => in + (loc.x + loc.y).toInt}, Loc(in, in)))
+  )
+
   implicit val arbImageString: Arbitrary[Image[String]] = Arbitrary(
     Arbitrary.arbInt.arbitrary.map(in => new Image[String]({ loc => in.toString +(loc.x + loc.y).toString}))
   )
@@ -79,7 +84,9 @@ class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
 //  checkAll("Monad laws", MonadTests(Image.imMonad).monad[Int, Int, String])
 
   implicit def cogenImage[A]: Cogen[Image[A]] =Cogen(_ => 3)
-  checkAll("CoMonad laws", ComonadTests(Image.imComonad).comonad[Int, Int, String])
+//  checkAll("CoMonad laws", ComonadTests(Image.imComonad).comonad[Int, Int, String])
+implicit def cogenImageXY[A]: Cogen[Imagexy[A]] = Cogen(a => (a.focus.x + a.focus.y).toLong)
+  checkAll("CoMonad laws XY", ComonadTests(Imagexy.imComonadxy).comonad[Int, Int, String])
 
   test("comonad Left identity") {
     val fa = new Image[Loc](identity)
@@ -124,6 +131,63 @@ class ColorTest extends AnyFunSuiteLike with FunSuiteDiscipline with Checkers {
     import Image.imComonad
     import cats.implicits._
     val fa = new Image[Loc](identity)
+    val ffa = fa.coflatten.coflatten
+    val ffaViaMAp = fa.coflatten.map(_.coflatten)
+
+     val areEqual = for {
+      x <- 0 to 10
+      y <- 0 to 10
+      loc = Loc(x, y)
+    } yield ffa.im(loc).im(loc).im(loc) == ffaViaMAp.im(loc).im(loc).im(loc)
+
+     assert(!areEqual.contains(false))
+  }
+
+//----
+
+  test("2comonad Left identity") {
+    val fa = new Imagexy[Loc](identity)
+    val fb = Imagexy.imComonadxy.coflatMap(fa)(Imagexy.imComonadxy.extract)
+
+    val areEqual = for {
+      x <- 0 to 10
+      y <- 0 to 10
+    } yield fa.im(Loc(x, y)) == fb.im(Loc(x, y))
+
+    assert(!areEqual.contains(false))
+  }
+
+    test("2comonad Right identity") {
+    val fa = new Imagexy[Loc](identity)
+    val f37 = (a: Imagexy[Loc]) => a.im(Loc(3, 7))
+    val fb = Imagexy.imComonadxy.extract(Imagexy.imComonadxy.coflatMap(fa)(f37))
+    val p37 = f37(fa)
+
+    assertResult(p37)(fb)
+  }
+
+//   fa.coflatten <-> fa.coflatMap(identity)
+  test("2coflatten identity") {
+    import Image.imComonad
+    import cats.implicits._
+    val fa = new Imagexy[Loc](identity)
+
+    val ffa = fa.coflatten
+    val ffa2 = fa.coflatMap(identity)
+
+    val areEqual = for {
+      x <- 0 to 10
+      y <- 0 to 10
+      loc = Loc(x, y)
+    } yield ffa.im(loc).im(loc) == ffa2.im(loc).im(loc)
+
+     assert(!areEqual.contains(false))
+  }
+
+  test("2coflatten through map") {
+    import Image.imComonad
+    import cats.implicits._
+    val fa = new Imagexy[Loc](identity)
     val ffa = fa.coflatten.coflatten
     val ffaViaMAp = fa.coflatten.map(_.coflatten)
 

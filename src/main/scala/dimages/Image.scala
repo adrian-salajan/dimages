@@ -219,6 +219,18 @@ object Image {
     colorAverage(pixels.toList)
   }
 
+    def regionAveragexy(i: Imagexy[Color], width: Int, height: Int): Color = {
+    val samples = for {
+      x <- rangeCenter0(width)
+      y <- rangeCenter0(height)
+    } yield (x + i.focus.x, y + i.focus.y)
+    val pixels = samples
+      .map(loc => i.im(Loc(loc._1, loc._2)))
+
+    colorAverage(pixels.toList)
+  }
+
+
   def colorAverage(color: List[Color]): Color = {
     val newRed = channelColorAverage(color.map(_.red).toArray)
     val newGreen = channelColorAverage(color.map(_.green).toArray)
@@ -371,4 +383,34 @@ object Image {
 
 
 class ImageC(img: Loc => Color) extends Image[Color](img)
+
+class Imagexy[A](img: Loc => A, val focus: Loc = Loc(0, 0)) extends Image[A](img)
+
+object Imagexy {
+     implicit val imComonadxy: Comonad[Imagexy] = new Comonad[Imagexy] {
+     override def extract[A](x: Imagexy[A]): A = x.im(x.focus)
+
+     override def coflatMap[A, B](fa: Imagexy[A])(f: Imagexy[A] => B): Imagexy[B] = {
+       new Imagexy[B](lb =>
+         f(
+           new Imagexy[A](la =>
+             fa.im(la), //lb = left identity, la = right identity
+             focus = Loc(fa.focus.x + lb.x, fa.focus.y + lb.y)
+           )
+         ),
+         focus = fa.focus
+       )
+     }
+
+     override def map[A, B](fa: Imagexy[A])(f: A => B): Imagexy[B] = {
+       coflatMap(fa)(img => f(extract(img)))
+     }
+
+   }
+
+  implicit class ImageOps[A](a: Image[A]) {
+    def toImageXY = new Imagexy[A](a.im)
+  }
+
+}
 

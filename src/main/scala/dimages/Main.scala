@@ -218,36 +218,54 @@ object Main {
     }
 
     def runComonadEffects(): Unit = {
-//      save[Color](ComonadEffects.average(bird,1), identity, "comonad/average-1px.png")
-//      save[Color](ComonadEffects.average(bird,4), identity, "comonad/average-4px.png")
-//      save[Color](ComonadEffects.average(bird,16), identity, "comonad/average-16px.png")
+      import Imagexy.ImageOps
+      //      save[Color](ComonadEffects.average(bird,1), identity, "comonad/average-1px.png")
+//      save[Color](ComonadEffects.averagexy(bird.toImageXY,4), identity, "comonad/average-4px.png")
+      //      save[Color](ComonadEffects.average(bird,16), identity, "comonad/average-16px.png")
 
-//      save[Color](
-//          ComonadEffects.translate(bird,200, 200),
-//          identity, "comonad/translate-200-200.png")
-//      save[Color](
-//        ComonadEffects.translate(bird,-200, -200),
-//        identity, "comonad/translate-minus-200-200.png")
-//
-//      save[Color](
-//        ComonadEffects.brightest(bird,20, 20),
-//        identity, "comonad/brightest-20x20.png")
-//
-//      save[Color](
-//        ComonadEffects.gausianBlur(bird),
-//        identity, "comonad/gausian_blur.png")
-//
-//      save[Color](
-//        ComonadEffects.edgeDetect(bird),
-//        identity, "comonad/edge_detect.png")
-//
-//      save[Color](
-//        ComonadEffects.emboss(bird),
-//        identity, "comonad/emboss.png")
+      //      save[Color](
+      //          ComonadEffects.translate(bird,200, 200),
+      //          identity, "comonad/translate-200-200.png")
+      //      save[Color](
+      //        ComonadEffects.translate(bird,-200, -200),
+      //        identity, "comonad/translate-minus-200-200.png")
+      //
+      //      save[Color](
+      //        ComonadEffects.brightest(bird,20, 20),
+      //        identity, "comonad/brightest-20x20.png")
+      //
+      //      save[Color](
+      //        ComonadEffects.gausianBlur(bird),
+      //        identity, "comonad/gausian_blur.png")
+      //
+      //      save[Color](
+      //        ComonadEffects.edgeDetect(bird),
+      //        identity, "comonad/edge_detect.png")
+      //
+      //      save[Color](
+      //        ComonadEffects.emboss(bird),
+      //        identity, "comonad/emboss.png")
 
-//            save[Color](
-//        ComonadEffects.enhanceContrast(bird,4, 4),
-//        identity, "comonad/enhance_contrast.png")
+      //            save[Color](
+      //        ComonadEffects.enhanceContrast(bird,4, 4),
+      //        identity, "comonad/enhance_contrast.png")
+
+
+                        save[Color](
+        ComonadEffects.translate(ComonadEffects.mirror(bird, 640), 640, 0),
+        identity, "comonad/mirror1.png")
+
+      save[Color](
+        ComonadEffects.translate(ComonadEffects.mirror(bird, 640), 0, 0),
+        identity, "comonad/mirror2.png")
+
+      save[Color](
+        ComonadEffects.translate(ComonadEffects.mirror(bird, 640), -640, 0),
+        identity, "comonad/mirror3.png")
+
+//                  save[Color](
+//        ComonadEffects.mirrorxy(bird.toImageXY, 640),
+//        identity, "comonad/mirrorxy.png")
 
 
     }

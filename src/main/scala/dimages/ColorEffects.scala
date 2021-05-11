@@ -244,6 +244,9 @@ import cats.instances.function._
     def average(a: Image[Color], squareSizeInPixels: Int): Image[Color] =
       a.coflatMap(img => Image.regionAverage(img, squareSizeInPixels, squareSizeInPixels))
 
+     def averagexy(a: Imagexy[Color], squareSizeInPixels: Int): Image[Color] =
+      a.coflatMap(img => Image.regionAveragexy(img, squareSizeInPixels, squareSizeInPixels))
+
     def translate(a: Image[Color], x: Int, y: Int): Image[Color] =
       a.coflatMap(img =>
         img.im(Loc(x, y))
@@ -324,5 +327,21 @@ import cats.instances.function._
      def emboss(a: Image[Color]) =
          a.coflatMap(img => convolutionThreshhold(img, Image.emboss))
 
+      def mirror(a: Image[Color], width: Int): Image[Color] =
+      a.coflatMap(img => mirrorPixel(img, width))
+
+    def mirrorPixel(value: Image[Color], width: Int): Color = {
+      val x = width
+      value.im(Loc(-x, 0))
     }
+
+    def mirrorxy(a: Imagexy[Color], width: Int): Image[Color] =
+      a.coflatMap(img => mirrorPixelxy(img, width))
+
+    def mirrorPixelxy(value: Imagexy[Color], width: Int): Color = {
+      val x = width - value.focus.x
+      value.im(Loc(x, value.focus.y))
+    }
+
+  }
 }
